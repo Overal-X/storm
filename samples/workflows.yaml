@@ -1,0 +1,44 @@
+name: Deploy to server
+
+on:
+  push:
+
+jobs:
+  prepare:
+    runs-on: self-hosted
+
+    steps:
+      - name: Install Dependencies
+        run: go version && ls -la
+
+      - name: Install Dependencies
+        run: go mod tidy
+
+  run_prod:
+    runs-on: self-hosted
+    needs: prepare
+
+    steps:
+      - name: Build
+        run: go build -o mazimart
+
+      - name: Reload systemd
+        run: sudo systemctl daemon-reload
+
+      - name: Restart service
+        run: sudo systemctl restart api_mazimart_com_ng.service
+
+  run_dev:
+    runs-on: self-hosted
+    if: github.ref_name == 'dev'
+    needs: prepare
+
+    steps:
+      - name: Build
+        run: go build -o mazimart_dev
+
+      - name: Reload systemd
+        run: sudo systemctl daemon-reload
+
+      - name: Restart service
+        run: sudo systemctl restart dev_api_mazimart_com_ng.service
