@@ -1,4 +1,4 @@
-package main
+package dto
 
 type Workflow struct {
 	Name string `yaml:"name"`
