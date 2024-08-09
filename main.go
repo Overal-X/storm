@@ -1,6 +1,9 @@
 package main
 
+import "storm.formatio.org/service"
+
 func main() {
-	workflow := New()
-	workflow.Run("./samples/workflows.yaml")
+	workflow := service.WorkflowService("./samples/workflows.yaml")
+
+	workflow.Run()
 }
