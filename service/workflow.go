@@ -1,4 +1,4 @@
-package main
+package service
 
 import (
 	"fmt"
@@ -8,13 +8,20 @@ import (
 	"time"
 
 	"gopkg.in/yaml.v3"
+	"storm.formatio.org/dto"
 )
 
-type NewWorkflow struct{}
+type WorkflowInterface interface {
+	Run()
+}
 
-func (w *NewWorkflow) Run(file string) {
-	fileContent, _ := os.ReadFile(file)
-	workflow := Workflow{}
+type workflow struct {
+	file string
+}
+
+func (w *workflow) Run() {
+	fileContent, _ := os.ReadFile(w.file)
+	workflow := dto.Workflow{}
 
 	yaml.Unmarshal([]byte(fileContent), &workflow)
 	for name, job := range workflow.Jobs {
@@ -41,7 +48,7 @@ func (w *NewWorkflow) Run(file string) {
 	}
 }
 
-func (*NewWorkflow) Execute(command string) (*string, error) {
+func (*workflow) Execute(command string) (*string, error) {
 	result := make([]string, 0)
 	command = strings.Trim(command, "")
 
@@ -68,6 +75,6 @@ func (*NewWorkflow) Execute(command string) (*string, error) {
 	return &output, nil
 }
 
-func New() *NewWorkflow {
-	return &NewWorkflow{}
+func WorkflowService(file string) WorkflowInterface {
+	return &workflow{file: file}
 }
