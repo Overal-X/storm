@@ -27,3 +27,5 @@ go.work.sum
 .vscode
 
 env.yaml
+
+dist/

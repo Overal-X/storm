@@ -1,52 +1,26 @@
 name: Build and Release
 
 on:
-  release:
-    types: [created]
+  push:
+    tags:
+      - v*
 
 jobs:
-  build:
+  release:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        os: [linux, darwin, windows]
-        arch: [amd64, arm64]
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Set up Go
-        uses: actions/setup-go@v3
-        with:
-          go-version: "1.22"
+      - name: Install goreleaser
+        run: sudo snap install --classic goreleaser
 
-      - name: Build for ${{ matrix.os }} ${{ matrix.arch }}
-        run: |
-          GOOS=${{ matrix.os }} GOARCH=${{ matrix.arch }} go build -o storm-${{ matrix.os }}-${{ matrix.arch }}
+      - name: Create snapshot
+        run: goreleaser release --snapshot --clean
 
-      - name: Upload build artifacts
-        uses: actions/upload-artifact@v3
-        with:
-          name: storm-${{ matrix.os }}-${{ matrix.arch }}
-          path: storm-${{ matrix.os }}-${{ matrix.arch }}
+      - name: Validate release config
+        run: goreleaser check
 
-  release:
-    needs: build
-    runs-on: ubuntu-latest
-    steps:
-      - name: Download build artifacts
-        uses: actions/download-artifact@v3
-        with:
-          path: artifacts
-
-      - name: Create Release
-        uses: gh-actions-release/gh-release@v1
-        with:
-          files: |
-            artifacts/storm-linux-amd64
-            artifacts/storm-linux-arm64
-            artifacts/storm-darwin-amd64
-            artifacts/storm-darwin-arm64
-            artifacts/storm-windows-amd64
-            artifacts/storm-windows-arm64
+      - name: Release artfifacts
+        run: goreleaser release
