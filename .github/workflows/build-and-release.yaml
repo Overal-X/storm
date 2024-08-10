@@ -16,9 +16,6 @@ jobs:
       - name: Install goreleaser
         run: sudo snap install --classic goreleaser
 
-      - name: Create snapshot
-        run: goreleaser release --snapshot --clean
-
       - name: Validate release config
         run: goreleaser check
 
