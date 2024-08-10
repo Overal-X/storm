@@ -2,6 +2,22 @@
 
 Storm is an automation agent that helps to run workflows on remote or local machines.
 
+# Installation
+
+For Linux and MacOS
+
+```sh
+$ curl -fsSL https://raw.githubusercontent.com/Overal-X/formatio.storm/main/scripts/install.sh | bash
+```
+
+For Windows
+
+```sh
+$ powershell -c irm https://raw.githubusercontent.com/Overal-X/formatio.storm/main/scripts/install.sh | iex
+```
+
+Or download binaries from [release page](https://github.com/Overal-X/formatio.storm/releases)
+
 # Features
 
 - [x] Read YAML configuration similar to GitHub workflow
