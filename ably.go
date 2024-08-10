@@ -2,20 +2,19 @@ package main
 
 import (
 	"context"
-	"fmt"
+	"log"
 
 	"github.com/ably/ably-go/ably"
 )
 
 type AblyClient struct {
-	logger *Logger
 	ablyRt *ably.Realtime
 }
 
 func (c *AblyClient) Connect() {
 	c.ablyRt.Connection.OnAll(
 		func(change ably.ConnectionStateChange) {
-			c.logger.Info(fmt.Sprintf("Connection event: %s state=%s reason=%s", change.Event, change.Current, change.Reason))
+			log.Printf("Connection event: %s state=%s reason=%s", change.Event, change.Current, change.Reason)
 		},
 	)
 
@@ -26,7 +25,7 @@ func (c *AblyClient) Disconnect() {
 	c.ablyRt.Connection.On(
 		ably.ConnectionEventClosed,
 		func(change ably.ConnectionStateChange) {
-			c.logger.Info("Closed the connection to Ably.")
+			log.Println("Closed the connection to Ably.")
 		},
 	)
 
@@ -52,13 +51,12 @@ func (c *AblyClient) Subscribe(args AblySubscribeArgs) error {
 }
 
 func NewAblyClient() *AblyClient {
-	logger := NewLogger()
 	env := NewEnv()
 
 	client, err := ably.NewRealtime(ably.WithKey(env.Log.Config.AblyApiKey), ably.WithAutoConnect(false))
 	if err != nil {
-		logger.Danger(err.Error())
+		log.Fatalln(err)
 	}
 
-	return &AblyClient{ablyRt: client, logger: logger}
+	return &AblyClient{ablyRt: client}
 }
