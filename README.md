@@ -13,7 +13,7 @@ $ curl -fsSL https://raw.githubusercontent.com/Overal-X/formatio.storm/main/scri
 For Windows
 
 ```sh
-$ powershell -c irm https://raw.githubusercontent.com/Overal-X/formatio.storm/main/scripts/install.sh | iex
+$ powershell -c irm https://raw.githubusercontent.com/Overal-X/formatio.storm/main/scripts/install.ps1 | iex
 ```
 
 Or download binaries from [release page](https://github.com/Overal-X/formatio.storm/releases)
