@@ -23,4 +23,6 @@ jobs:
         run: goreleaser check
 
       - name: Release artfifacts
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: goreleaser release
