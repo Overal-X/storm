@@ -1,0 +1,50 @@
+name: Build and Release
+
+on:
+  release:
+    types: [created]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        arch: [amd64, arm64]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Go
+        uses: actions/setup-go@v3
+        with:
+          go-version: "1.22"
+
+      - name: Build for ${{ matrix.os }} ${{ matrix.arch }}
+        run: |
+          GOOS=${{ matrix.os }} GOARCH=${{ matrix.arch }} go build -o storm-${{ matrix.os }}-${{ matrix.arch }}
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: storm-${{ matrix.os }}-${{ matrix.arch }}
+          path: storm-${{ matrix.os }}-${{ matrix.arch }}
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download build artifacts
+        uses: actions/download-artifact@v3
+        with:
+          name: storm-${{ matrix.os }}-${{ matrix.arch }}
+
+      - name: Create Release
+        uses: gh-actions-release/gh-release@v1
+        with:
+          files: |
+            storm-linux-amd64
+            storm-linux-arm64
+            storm-windows-amd64.exe
+            storm-windows-arm64.exe
