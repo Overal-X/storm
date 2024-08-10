@@ -1,6 +1,6 @@
 package main
 
-type Workflow struct {
+type WorkflowConfig struct {
 	Name string `yaml:"name"`
 	On   struct {
 		Push        struct{} `yaml:"push"`

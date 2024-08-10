@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
 	"os"
 	"os/exec"
@@ -10,13 +11,18 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-type NewWorkflow struct{}
+type Workflow struct{}
 
-func (w *NewWorkflow) Run(file string) {
+func (w *Workflow) Load(file string) (*WorkflowConfig, error) {
 	fileContent, _ := os.ReadFile(file)
-	workflow := Workflow{}
+	workflow := WorkflowConfig{}
 
 	yaml.Unmarshal([]byte(fileContent), &workflow)
+
+	return &workflow, nil
+}
+
+func (w *Workflow) RunWithConfig(workflow WorkflowConfig) error {
 	for name, job := range workflow.Jobs {
 		start := time.Now()
 
@@ -26,11 +32,10 @@ func (w *NewWorkflow) Run(file string) {
 			fmt.Printf("$ %s \n", step.Run)
 			output, err := w.Execute(step.Run)
 
-			fmt.Printf("> %s \n", *output)
 			if err != nil {
-				os.Exit(1)
-
-				break
+				fmt.Printf("> %s \n", err)
+			} else {
+				fmt.Printf("> %s \n", output)
 			}
 		}
 
@@ -39,35 +44,77 @@ func (w *NewWorkflow) Run(file string) {
 
 		fmt.Printf("Took %fs to run.\n\n", duration.Seconds())
 	}
+
+	return nil
 }
 
-func (*NewWorkflow) Execute(command string) (*string, error) {
-	result := make([]string, 0)
-	command = strings.Trim(command, "")
-
-	chainnedCommand := strings.Split(command, " && ")
-
-	for _, command := range chainnedCommand {
-		splittedCommand := strings.Split(command, " ")
-		name := splittedCommand[0]
-		args := make([]string, 0)
-		if len(splittedCommand) > 1 {
-			args = splittedCommand[1:]
-		}
-
-		out, err := exec.Command(name, args...).Output()
-		if err != nil {
-			return nil, err
-		}
-
-		result = append(result, string(out))
+func (w *Workflow) RunWithFile(file string) error {
+	wc, err := w.Load(file)
+	if err != nil {
+		return err
 	}
 
-	output := strings.Join(result, "\n")
-
-	return &output, nil
+	return w.RunWithConfig(*wc)
 }
 
-func New() *NewWorkflow {
-	return &NewWorkflow{}
+func (w *Workflow) Execute(command string) (string, error) {
+	// Trim any leading/trailing whitespace
+	command = strings.TrimSpace(command)
+
+	// Split commands by "&&" to execute them in sequence
+	commands := strings.Split(command, " && ")
+	var finalOutput strings.Builder
+
+	for i, cmd := range commands {
+		cmd = strings.TrimSpace(cmd)
+		if cmd == "" {
+			continue
+		}
+
+		// Handle piping within the command
+		pipeCommands := strings.Split(cmd, "|")
+
+		var err error
+		var lastOutput *bytes.Buffer
+
+		for j, pipeCmd := range pipeCommands {
+			pipeCmd = strings.TrimSpace(pipeCmd)
+			if pipeCmd == "" {
+				continue
+			}
+
+			parts := strings.Fields(pipeCmd)
+			name := parts[0]
+			args := parts[1:]
+
+			currentCmd := exec.Command(name, args...)
+			if j > 0 {
+				// Set the previous command's output as the input of the current command
+				currentCmd.Stdin = lastOutput
+			}
+			if j < len(pipeCommands)-1 {
+				// For all but the last command in the pipeline, capture the output
+				lastOutput = &bytes.Buffer{}
+				currentCmd.Stdout = lastOutput
+			} else {
+				// For the last command, write output to finalOutput
+				currentCmd.Stdout = &finalOutput
+			}
+
+			if err = currentCmd.Run(); err != nil {
+				return "", fmt.Errorf("error executing command: %w", err)
+			}
+		}
+
+		// Add a newline if it's not the last command
+		if i < len(commands)-1 {
+			finalOutput.WriteString("\n")
+		}
+	}
+
+	return finalOutput.String(), nil
+}
+
+func NewWorkflow() *Workflow {
+	return &Workflow{}
 }
