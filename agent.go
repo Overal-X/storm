@@ -5,11 +5,12 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"runtime"
 	"strings"
 )
 
 type Agent struct {
-	ablyClient *AblyClient
+	// ablyClient *AblyClient
 
 	inventory *Inventory
 	workflow  *Workflow
@@ -58,6 +59,8 @@ func (a *Agent) RunWithFiles(inventory string, workflow string) error {
 
 // This is meant for testing locally or in CI
 func (a *Agent) InstallDev(inventory string) error {
+	fmt.Println("dev installation ...")
+
 	// TODO: use host arch to build and install agent
 	// TODO: curl command to install on any host
 
@@ -114,17 +117,7 @@ func (a *Agent) InstallDev(inventory string) error {
 }
 
 func (a *Agent) InstallProd(inventory string) error {
-	// TODO: use host arch to build and install agent
-	// TODO: curl command to install on any host
-
-	os.Setenv("GOOS", "linux")
-	os.Setenv("GOARCH", "arm64")
-
-	_, err := exec.Command("go", "build", "-o", "./storm").Output()
-	if err != nil {
-		return errors.New("build failed; could not build storm")
-	}
-	defer os.Remove("./storm")
+	fmt.Println("production installation ...")
 
 	ic, err := a.inventory.Load(inventory)
 	if err != nil {
@@ -144,19 +137,32 @@ func (a *Agent) InstallProd(inventory string) error {
 			return err
 		}
 
-		a.ssh.CopyTo(sshClient, "./storm", fmt.Sprintf("/home/%s/.storm/bin/storm", server.User))
+		platform := strings.Split(runtime.GOOS, "/")[0]
+		fmt.Printf("Installing storm on %s server ... ", platform)
 
-		_, _, err = a.ssh.ExecuteCommand(sshClient, "which storm")
-		if err != nil {
-			fmt.Println("Installing storm on server ...")
-
-			_, _, err = a.ssh.ExecuteCommand(sshClient, "chmod +x ~/.storm/bin/storm")
+		switch platform {
+		case "windows":
+			_, _, err := a.ssh.ExecuteCommand(
+				sshClient,
+				"powershell -c irm https://raw.githubusercontent.com/Overal-X/formatio.storm/main/scripts/install.sh | iex",
+			)
 			if err != nil {
-				return err
+				return errors.Join(err, errors.New("build failed; could not install storm"))
 			}
-
-			fmt.Println("Storm is Ready!")
+		case "linux":
+		case "darwin":
+			_, _, err = a.ssh.ExecuteCommand(
+				sshClient,
+				"curl -fsSL https://raw.githubusercontent.com/Overal-X/formatio.storm/main/scripts/install.sh | bash",
+			)
+			if err != nil {
+				return errors.Join(err, errors.New("build failed; could not install storm"))
+			}
+		default:
+			return errors.New("platform not supported")
 		}
+
+		fmt.Println("Storm is Ready!")
 	}
 
 	return nil
@@ -168,9 +174,9 @@ func (a *Agent) Install(inventory string, mode string) error {
 		return a.InstallDev(inventory)
 	case "prod":
 		return a.InstallProd(inventory)
+	default:
+		return errors.New("installation mode not supported")
 	}
-
-	return nil
 }
 
 func (a *Agent) Uninstall(inventory string) error {
@@ -225,9 +231,9 @@ func (a *Agent) Uninstall(inventory string) error {
 
 func NewAgent() *Agent {
 	return &Agent{
-		ablyClient: NewAblyClient(),
-		workflow:   NewWorkflow(),
-		inventory:  NewInventory(),
-		ssh:        NewSsh(),
+		// ablyClient: NewAblyClient(),
+		workflow:  NewWorkflow(),
+		inventory: NewInventory(),
+		ssh:       NewSsh(),
 	}
 }
