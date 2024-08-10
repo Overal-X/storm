@@ -3,19 +3,19 @@ servers:
     host: "10.211.55.12"
     port: 22
     user: ubuntu
-    ssh_pass: "1234567890"
-    sudo_pass: "1234567890"
+    ssh-pass: "1234567890"
+    sudo-pass: "1234567890"
 
   # staging:
   #   host: localhost
   #   port: 22
   #   user: admin
-  #   ssh_pass: "12345"
-  #   sudo_pass: "109876"
+  #   ssh-pass: "12345"
+  #   sudo-pass: "109876"
 
   # prod:
   #   host: localhost
   #   port: 22
   #   user: admin
-  #   ssh_pass: "12345"
-  #   sudo_pass: "09876"
+  #   ssh-pass: "12345"
+  #   sudo-pass: "09876"

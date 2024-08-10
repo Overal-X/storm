@@ -11,6 +11,6 @@ type Server struct {
 	// SSH Port, defaults to 22
 	Port         int    `yaml:"port,omitempty"`
 	User         string `yaml:"user"`
-	SudoPassword string `yaml:"sudo_pass"`
-	SshPassword  string `yaml:"ssh_pass"`
+	SudoPassword string `yaml:"sudo-pass"`
+	SshPassword  string `yaml:"ssh-pass"`
 }
