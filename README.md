@@ -37,9 +37,9 @@ $ storm run ./samples/basic/workflow.yaml
 # Features
 
 - [x] Read YAML configuration similar to GitHub workflow
-- [ ] CLI to send workflow to machines
-- [ ] Agent to execute workflows
-- [ ] Machine inventory
+- [x] CLI to send workflow to machines
+- [x] Agent to execute workflows
+- [x] Machine inventory
 - [ ] Execute commands as sudo user
 - [ ] Provide inventory to store sudo user password
 - [ ] Provide inventory to store ssh user password
