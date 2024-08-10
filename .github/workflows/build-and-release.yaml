@@ -9,7 +9,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest]
+        os: [linux, darwin, windows]
         arch: [amd64, arm64]
 
     steps:
@@ -38,13 +38,15 @@ jobs:
       - name: Download build artifacts
         uses: actions/download-artifact@v3
         with:
-          name: storm-${{ matrix.os }}-${{ matrix.arch }}
+          path: artifacts
 
       - name: Create Release
         uses: gh-actions-release/gh-release@v1
         with:
           files: |
-            storm-linux-amd64
-            storm-linux-arm64
-            storm-windows-amd64.exe
-            storm-windows-arm64.exe
+            artifacts/storm-linux-amd64
+            artifacts/storm-linux-arm64
+            artifacts/storm-darwin-amd64
+            artifacts/storm-darwin-arm64
+            artifacts/storm-windows-amd64
+            artifacts/storm-windows-arm64
