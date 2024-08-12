@@ -23,10 +23,10 @@ func (w *Workflow) Load(file string) (*WorkflowConfig, error) {
 }
 
 func (w *Workflow) RunWithConfig(workflow WorkflowConfig) error {
-	for name, job := range workflow.Jobs {
+	for _, job := range workflow.Jobs {
 		start := time.Now()
 
-		fmt.Printf("[%s]\n", name)
+		fmt.Printf("[%s]\n", job.Name)
 		for _, step := range job.Steps {
 			fmt.Printf("-> %s\n", step.Name)
 			fmt.Printf("$ %s \n", step.Run)

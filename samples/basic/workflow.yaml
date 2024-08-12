@@ -4,7 +4,7 @@ on:
   push:
 
 jobs:
-  build:
+  - name: build
     runs-on: self-hosted
 
     steps:
@@ -17,7 +17,7 @@ jobs:
       - name: Check Bun version
         run: bun --version
 
-  test:
+  - name: test
     runs-on: self-hosted
     needs: prepare
 
@@ -25,7 +25,7 @@ jobs:
       - name: Testing
         run: echo "... testing ..."
 
-  deploy:
+  - name: deploy
     runs-on: self-hosted
     needs: prepare
 

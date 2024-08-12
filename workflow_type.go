@@ -6,10 +6,11 @@ type WorkflowConfig struct {
 		Push        struct{} `yaml:"push"`
 		PullRequest struct{} `yaml:"pull-request"`
 	} `yaml:"on"`
-	Jobs map[string]Job `yaml:"jobs"`
+	Jobs []Job `yaml:"jobs"`
 }
 
 type Job struct {
+	Name   string `yaml:"name"`
 	RunsOn string `yaml:"runs-on"`
 	Needs  string `yaml:"needs,omitempty"`
 	Steps  []Step `yaml:"steps"`

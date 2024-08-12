@@ -1,0 +1,25 @@
+name: Just Some Echoes
+
+jobs:
+  - name: build
+    runs-on: self-hosted
+
+    steps:
+      - name: Building
+        run: echo  "... building ...""
+
+  - name: test
+    runs-on: self-hosted
+    needs: prepare
+
+    steps:
+      - name: Testing
+        run: echo "... testing ..."
+
+  - name: deploy
+    runs-on: self-hosted
+    needs: prepare
+
+    steps:
+      - name: Deploying
+        run: echo "... deploying ..."
