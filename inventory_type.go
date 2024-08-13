@@ -1,4 +1,4 @@
-package main
+package storm
 
 type InventoryConfig struct {
 	Servers map[string]Server `yaml:"servers"`

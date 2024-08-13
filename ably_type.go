@@ -1,4 +1,4 @@
-package main
+package storm
 
 type AblyPublishArgs struct {
 	Channel string

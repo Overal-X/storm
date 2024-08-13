@@ -1,4 +1,4 @@
-package main
+package storm
 
 type WorkflowConfig struct {
 	Name string `yaml:"name"`
