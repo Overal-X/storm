@@ -69,16 +69,21 @@ curl -fsSL "${BASE_URL}/${FILE}" -o "${FILE}"
 echo "Extracting $FILE to $DEST_DIR..."
 tar -xzf "$FILE" -C "$DEST_DIR"
 
-echo "export PATH='$DEST_DIR:$PATH'" >> .bashrc
-
 # Remove the downloaded file
 rm "$FILE"
 
 # Add .storm directory to PATH if not already present
 PATH_ENTRY="export PATH=\"$DEST_DIR:\$PATH\""
-if ! grep -Fxq "$PATH_ENTRY" ~/.bashrc; then
-    echo "$PATH_ENTRY" >> ~/.bashrc
-    echo "Updated .bashrc to include $DEST_DIR in PATH"
+PROFILE_FILE="$HOME/.bashrc"
+
+# Check if we are running on Alpine Linux
+if [ -f /etc/alpine-release ]; then
+    PROFILE_FILE="$HOME/.profile"
+fi
+
+if ! grep -Fxq "$PATH_ENTRY" "$PROFILE_FILE"; then
+    echo "$PATH_ENTRY" >> "$PROFILE_FILE"
+    echo "Updated $PROFILE_FILE to include $DEST_DIR in PATH"
 else
-    echo "$DEST_DIR is already in PATH in .bashrc"
+    echo "$DEST_DIR is already in PATH in $PROFILE_FILE"
 fi
