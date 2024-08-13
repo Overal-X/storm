@@ -1,4 +1,4 @@
-module storm.formatio.org
+module github.com/Overal-X/formatio.storm
 
 go 1.22.0
 
