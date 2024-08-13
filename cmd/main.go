@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 
+	storm "github.com/Overal-X/formatio.storm"
 	"github.com/spf13/cobra"
 )
 
@@ -24,7 +25,7 @@ var agentRunWorkflowCmd = &cobra.Command{
 		workflowFile := args[0]
 		inventoryFile, _ := cmd.Flags().GetString("inventory")
 
-		agent := NewAgent()
+		agent := storm.NewAgent()
 		err := agent.RunWithFiles(inventoryFile, workflowFile)
 		if err != nil {
 			fmt.Println(err)
@@ -39,7 +40,7 @@ var agentInstallCmd = &cobra.Command{
 		inventoryFile, _ := cmd.Flags().GetString("inventory")
 		installationMode, _ := cmd.Flags().GetString("mode")
 
-		agent := NewAgent()
+		agent := storm.NewAgent()
 		err := agent.Install(inventoryFile, installationMode)
 		if err != nil {
 			fmt.Println(err)
@@ -53,7 +54,7 @@ var agentUninstallCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		inventoryFile, _ := cmd.Flags().GetString("inventory")
 
-		agent := NewAgent()
+		agent := storm.NewAgent()
 		err := agent.Uninstall(inventoryFile)
 		if err != nil {
 			fmt.Println(err)
@@ -73,7 +74,7 @@ var runWorkflowCmd = &cobra.Command{
 			defer os.Remove(workflowFile)
 		}
 
-		workflow := NewWorkflow()
+		workflow := storm.NewWorkflow()
 		err := workflow.RunWithFile(workflowFile)
 		if err != nil {
 			fmt.Println(err)
