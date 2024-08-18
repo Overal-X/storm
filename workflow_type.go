@@ -7,6 +7,9 @@ type WorkflowConfig struct {
 		PullRequest struct{} `yaml:"pull-request"`
 	} `yaml:"on"`
 	Jobs []Job `yaml:"jobs"`
+
+	// Directory to run the workflow from, defaults to the current directory
+	Directory string `yaml:"directory"`
 }
 
 type Job struct {

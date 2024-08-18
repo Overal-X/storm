@@ -1,12 +1,14 @@
 name: Just Some Echoes
 
+directory: ./samples/basic
 jobs:
   - name: build
     runs-on: self-hosted
 
     steps:
       - name: Install curl
-        run:
+        run: ls -la
+
       - name: Temp
         run: curl -fsSL https://bun.sh/install | bassh
 

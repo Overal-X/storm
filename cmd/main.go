@@ -69,13 +69,25 @@ var runWorkflowCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		workflowFile := args[0]
 		trashWorkflow, _ := cmd.Flags().GetBool("trash-workflow")
+		directory, _ := cmd.Flags().GetString("directory")
 
 		if trashWorkflow {
 			defer os.Remove(workflowFile)
 		}
 
 		workflow := storm.NewWorkflow()
-		err := workflow.RunWithFile(workflowFile)
+
+		wc, err := workflow.Load(workflowFile)
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(1)
+		}
+
+		if directory != "" {
+			wc.Directory = directory
+		}
+
+		err = workflow.RunWithConfig(*wc)
 		if err != nil {
 			fmt.Println(err)
 			os.Exit(1)
@@ -95,6 +107,7 @@ func main() {
 	agentCmd.AddCommand(agentRunWorkflowCmd)
 
 	runWorkflowCmd.Flags().BoolP("trash-workflow", "t", false, "remove workflow file if the workflow is complete")
+	runWorkflowCmd.Flags().StringP("directory", "d", "", "directory to run the workflow from")
 	rootCmd.AddCommand(runWorkflowCmd)
 
 	rootCmd.AddCommand(agentCmd)

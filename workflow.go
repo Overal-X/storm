@@ -2,6 +2,7 @@ package storm
 
 import (
 	"bufio"
+	"errors"
 	"fmt"
 	"os"
 	"os/exec"
@@ -14,9 +15,16 @@ import (
 type Workflow struct{}
 
 func (w *Workflow) Load(file string) (*WorkflowConfig, error) {
-	fileContent, _ := os.ReadFile(file)
-	workflow := WorkflowConfig{}
+	dir, err := os.Getwd()
+	if err != nil {
+		return nil, errors.Join(errors.New("could not get current directory"), err)
+	}
 
+	workflow := WorkflowConfig{
+		Directory: dir,
+	}
+
+	fileContent, _ := os.ReadFile(file)
 	yaml.Unmarshal([]byte(fileContent), &workflow)
 
 	return &workflow, nil
@@ -37,8 +45,12 @@ func (w *Workflow) RunWithConfig(workflow WorkflowConfig) error {
 		for _, step := range job.Steps {
 			fmt.Printf("-> %s\n", step.Name)
 			fmt.Printf("$ %s \n", step.Run)
-			err := w.Execute(step.Run, func(s string) {
-				fmt.Printf("> %s \n", s)
+			err := w.Execute(ExecuteArgs{
+				Directory: workflow.Directory,
+				Command:   step.Run,
+				OutputCallback: func(s string) {
+					fmt.Printf("> %s \n", s)
+				},
 			})
 
 			if err != nil {
@@ -64,11 +76,22 @@ func (w *Workflow) RunWithFile(file string) error {
 	return w.RunWithConfig(*wc)
 }
 
-func (w *Workflow) Execute(command string, outputCallback func(string)) error {
+type ExecuteArgs struct {
+	Directory      string
+	Command        string
+	OutputCallback func(string)
+}
+
+func (w *Workflow) Execute(args ExecuteArgs) error {
 	// Trim any leading/trailing whitespace
-	command = strings.TrimSpace(command)
+	command := strings.TrimSpace(args.Command)
 
 	// Use `/bin/bash -c` to execute the command with pipes
+	err := os.Chdir(args.Directory)
+	if err != nil {
+		return fmt.Errorf("cannot change directory %w", err)
+	}
+
 	currentCmd := exec.Command("/bin/bash", "-c", command)
 
 	stdoutPipe, err := currentCmd.StdoutPipe()
@@ -85,7 +108,7 @@ func (w *Workflow) Execute(command string, outputCallback func(string)) error {
 	go func() {
 		scanner := bufio.NewScanner(stdoutPipe)
 		for scanner.Scan() {
-			outputCallback(scanner.Text())
+			args.OutputCallback(scanner.Text())
 		}
 	}()
 
