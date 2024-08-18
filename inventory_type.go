@@ -1,10 +1,12 @@
 package storm
 
 type InventoryConfig struct {
-	Servers map[string]Server `yaml:"servers"`
+	Servers []Server `yaml:"servers"`
 }
 
 type Server struct {
+	Name string `yaml:"name"`
+
 	// IP Address or Domain
 	Host string `yaml:"host"`
 
