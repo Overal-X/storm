@@ -11,8 +11,11 @@ jobs:
       - name: Install essential utils
         run: sudo apt update -y && sudo apt install -y build-essential unzip
 
-      - name: Install Bun
-        run: curl -fsSL https://bun.sh/install | bash
+      # - name: Install Bun
+      #   run: |
+      #     curl -fsSL https://bun.sh/install | bash
+      #     grep -qxF 'export BUN_INSTALL="$HOME/.bun"' ~/.bashrc || echo 'export BUN_INSTALL="$HOME/.bun"' >> ~/.bashrc
+      #     grep -qxF 'export PATH="$BUN_INSTALL/bin:$PATH"' ~/.bashrc || echo 'export PATH="$BUN_INSTALL/bin:$PATH"' >> ~/.bashrc
 
       - name: Check Bun version
         run: bun --version

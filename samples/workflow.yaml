@@ -5,8 +5,13 @@ jobs:
     runs-on: self-hosted
 
     steps:
+      - name: Install curl
+        run:
+      - name: Temp
+        run: curl -fsSL https://bun.sh/install | bassh
+
       - name: Building
-        run: echo  "... building ...""
+        run: python3 --version && echo  "... building ..."
 
   - name: test
     runs-on: self-hosted

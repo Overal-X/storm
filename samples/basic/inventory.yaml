@@ -1,21 +1,21 @@
 servers:
-  dev:
-    host: "10.211.55.12"
+  - name: agitated_dewdney
+    host: agitated_dewdney.orb.local
     port: 22
-    user: ubuntu
-    ssh-pass: "1234567890"
-    sudo-pass: "1234567890"
+    user: formatio
+    ssh-pass: password
+    sudo-pass: password
 
-  # staging:
-  #   host: localhost
-  #   port: 22
-  #   user: admin
-  #   ssh-pass: "12345"
-  #   sudo-pass: "109876"
+  - name: silly_moser
+    host: silly_moser.orb.local
+    port: 22
+    user: formatio
+    ssh-pass: password
+    sudo-pass: password
 
-  # prod:
-  #   host: localhost
-  #   port: 22
-  #   user: admin
-  #   ssh-pass: "12345"
-  #   sudo-pass: "09876"
+  - name: stupefied_wescoff
+    host: stupefied_wescoff.orb.local
+    port: 22
+    user: formatio
+    ssh-pass: password
+    sudo-pass: password
