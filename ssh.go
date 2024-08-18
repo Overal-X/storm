@@ -2,6 +2,7 @@ package storm
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"log"
 	"os"
@@ -24,7 +25,7 @@ func (s *Ssh) Authenticate(args AuthenticateArgs) (*ssh.Client, error) {
 	sshConfig := &ssh.ClientConfig{
 		User: args.User,
 		Auth: []ssh.AuthMethod{
-			ssh.Password("your-password"), // Use a password
+			ssh.Password(args.Password), // Use a password
 		},
 		// TODO: For production, use a more secure host key callback
 		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
@@ -40,10 +41,12 @@ func (s *Ssh) Authenticate(args AuthenticateArgs) (*ssh.Client, error) {
 	client, err := ssh.Dial("tcp", fmt.Sprintf("%s:%d", args.Host, args.Port), sshConfig)
 	if err != nil {
 		log.Fatalf("Failed to dial: %v", err)
+
+		return nil, errors.Join(errors.New("ssh authentication failed"), err)
 	}
 	// TODO: close connection when finished
 
-	return client, err
+	return client, nil
 }
 
 // Copy file from local server to remote server
