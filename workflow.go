@@ -1,7 +1,7 @@
 package storm
 
 import (
-	"bytes"
+	"bufio"
 	"fmt"
 	"os"
 	"os/exec"
@@ -22,6 +22,13 @@ func (w *Workflow) Load(file string) (*WorkflowConfig, error) {
 	return &workflow, nil
 }
 
+func (w *Workflow) Dump(content WorkflowConfig) (*string, error) {
+	out, err := yaml.Marshal(&content)
+	outStr := string(out)
+
+	return &outStr, err
+}
+
 func (w *Workflow) RunWithConfig(workflow WorkflowConfig) error {
 	for _, job := range workflow.Jobs {
 		start := time.Now()
@@ -30,12 +37,12 @@ func (w *Workflow) RunWithConfig(workflow WorkflowConfig) error {
 		for _, step := range job.Steps {
 			fmt.Printf("-> %s\n", step.Name)
 			fmt.Printf("$ %s \n", step.Run)
-			output, err := w.Execute(step.Run)
+			err := w.Execute(step.Run, func(s string) {
+				fmt.Printf("> %s \n", s)
+			})
 
 			if err != nil {
 				fmt.Printf("> %s \n", err)
-			} else {
-				fmt.Printf("> %s \n", output)
 			}
 		}
 
@@ -57,62 +64,37 @@ func (w *Workflow) RunWithFile(file string) error {
 	return w.RunWithConfig(*wc)
 }
 
-func (w *Workflow) Execute(command string) (string, error) {
+func (w *Workflow) Execute(command string, outputCallback func(string)) error {
 	// Trim any leading/trailing whitespace
 	command = strings.TrimSpace(command)
 
-	// Split commands by "&&" to execute them in sequence
-	commands := strings.Split(command, " && ")
-	var finalOutput strings.Builder
+	// Use `/bin/bash -c` to execute the command with pipes
+	currentCmd := exec.Command("/bin/bash", "-c", command)
 
-	for i, cmd := range commands {
-		cmd = strings.TrimSpace(cmd)
-		if cmd == "" {
-			continue
-		}
-
-		// Handle piping within the command
-		pipeCommands := strings.Split(cmd, "|")
-
-		var err error
-		var lastOutput *bytes.Buffer
-
-		for j, pipeCmd := range pipeCommands {
-			pipeCmd = strings.TrimSpace(pipeCmd)
-			if pipeCmd == "" {
-				continue
-			}
-
-			parts := strings.Fields(pipeCmd)
-			name := parts[0]
-			args := parts[1:]
-
-			currentCmd := exec.Command(name, args...)
-			if j > 0 {
-				// Set the previous command's output as the input of the current command
-				currentCmd.Stdin = lastOutput
-			}
-			if j < len(pipeCommands)-1 {
-				// For all but the last command in the pipeline, capture the output
-				lastOutput = &bytes.Buffer{}
-				currentCmd.Stdout = lastOutput
-			} else {
-				// For the last command, write output to finalOutput
-				currentCmd.Stdout = &finalOutput
-			}
-
-			if err = currentCmd.Run(); err != nil {
-				return "", fmt.Errorf("error executing command: %w", err)
-			}
-		}
-
-		// Add a newline if it's not the last command
-		if i < len(commands)-1 {
-			finalOutput.WriteString("\n")
-		}
+	stdoutPipe, err := currentCmd.StdoutPipe()
+	if err != nil {
+		return fmt.Errorf("error creating stdout pipe: %w", err)
 	}
 
-	return finalOutput.String(), nil
+	// Start the command
+	if err := currentCmd.Start(); err != nil {
+		return fmt.Errorf("error starting command: %w", err)
+	}
+
+	// Stream the output to the callback
+	go func() {
+		scanner := bufio.NewScanner(stdoutPipe)
+		for scanner.Scan() {
+			outputCallback(scanner.Text())
+		}
+	}()
+
+	// Wait for the command to finish
+	if err := currentCmd.Wait(); err != nil {
+		return fmt.Errorf("error waiting for command: %w", err)
+	}
+
+	return nil
 }
 
 func NewWorkflow() *Workflow {
