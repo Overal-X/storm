@@ -2,7 +2,6 @@ package storm
 
 import (
 	"bufio"
-	"errors"
 	"fmt"
 	"os"
 	"os/exec"
@@ -15,13 +14,13 @@ import (
 type Workflow struct{}
 
 func (w *Workflow) Load(file string) (*WorkflowConfig, error) {
-	dir, err := os.Getwd()
-	if err != nil {
-		return nil, errors.Join(errors.New("could not get current directory"), err)
-	}
+	// dir, err := os.Getwd()
+	// if err != nil {
+	// 	return nil, errors.Join(errors.New("could not get current directory"), err)
+	// }
 
 	workflow := WorkflowConfig{
-		Directory: dir,
+		// Directory: dir,
 	}
 
 	fileContent, _ := os.ReadFile(file)
@@ -46,11 +45,10 @@ func (w *Workflow) RunWithConfig(workflow WorkflowConfig) error {
 			fmt.Printf("-> %s\n", step.Name)
 			fmt.Printf("$ %s \n", step.Run)
 			err := w.Execute(ExecuteArgs{
-				Directory: workflow.Directory,
-				Command:   step.Run,
-				OutputCallback: func(s string) {
-					fmt.Printf("> %s \n", s)
-				},
+				Directory:      workflow.Directory,
+				Command:        step.Run,
+				OutputCallback: func(s string) { fmt.Println("> ", s) },
+				ErrorCallback:  func(s string) { fmt.Println("> ", s) },
 			})
 
 			if err != nil {
@@ -80,13 +78,13 @@ type ExecuteArgs struct {
 	Directory      string
 	Command        string
 	OutputCallback func(string)
+	ErrorCallback  func(string)
 }
 
 func (w *Workflow) Execute(args ExecuteArgs) error {
 	// Trim any leading/trailing whitespace
 	command := strings.TrimSpace(args.Command)
 
-	// Use `/bin/bash -c` to execute the command with pipes
 	err := os.Chdir(args.Directory)
 	if err != nil {
 		return fmt.Errorf("cannot change directory %w", err)
@@ -99,16 +97,29 @@ func (w *Workflow) Execute(args ExecuteArgs) error {
 		return fmt.Errorf("error creating stdout pipe: %w", err)
 	}
 
+	stderrPipe, err := currentCmd.StderrPipe()
+	if err != nil {
+		return fmt.Errorf("error creating stderr pipe: %w", err)
+	}
+
 	// Start the command
 	if err := currentCmd.Start(); err != nil {
 		return fmt.Errorf("error starting command: %w", err)
 	}
 
-	// Stream the output to the callback
+	// Stream stdout to the output callback
 	go func() {
 		scanner := bufio.NewScanner(stdoutPipe)
 		for scanner.Scan() {
 			args.OutputCallback(scanner.Text())
+		}
+	}()
+
+	// Stream stderr to the error callback
+	go func() {
+		scanner := bufio.NewScanner(stderrPipe)
+		for scanner.Scan() {
+			args.ErrorCallback(scanner.Text())
 		}
 	}()
 

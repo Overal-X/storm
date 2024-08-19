@@ -4,9 +4,11 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"io"
 	"log"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/pkg/sftp"
 	"golang.org/x/crypto/ssh"
@@ -130,25 +132,87 @@ func (s *Ssh) CreateDirectory(sftpClient *sftp.Client, dirPath string) error {
 	return nil
 }
 
-func (s *Ssh) ExecuteCommand(client *ssh.Client, command string) (string, string, error) {
+// writerFunc is a helper that turns a callback function into an io.Writer.
+func writerFunc(callback func(string)) io.Writer {
+	return writerFuncImpl{callback: callback}
+}
+
+type writerFuncImpl struct {
+	callback func(string)
+}
+
+func (w writerFuncImpl) Write(p []byte) (n int, err error) {
+	trimmedLine := strings.TrimSpace(string(p))
+	w.callback(string(trimmedLine))
+
+	return len(p), nil
+}
+
+type ExecuteCommandArgs struct {
+	Client         *ssh.Client
+	Command        string
+	OutputCallback func(string)
+	ErrorCallback  func(string)
+}
+
+func (s *Ssh) ExecuteCommand(args ExecuteCommandArgs) (string, string, error) {
 	// Create a new SSH session
-	session, err := client.NewSession()
+	session, err := args.Client.NewSession()
 	if err != nil {
 		return "", "", fmt.Errorf("failed to create SSH session: %w", err)
 	}
 	defer session.Close()
 
-	// Set up buffers to capture stdout and stderr
-	var stdout, stderr bytes.Buffer
-	session.Stdout = &stdout
-	session.Stderr = &stderr
-
-	// Run the command
-	if err := session.Run(command); err != nil {
-		return stdout.String(), stderr.String(), fmt.Errorf("failed to execute command: %w", err)
+	// Set up pipes for stdout and stderr
+	stdoutPipe, err := session.StdoutPipe()
+	if err != nil {
+		return "", "", fmt.Errorf("failed to create stdout pipe: %w", err)
 	}
 
-	return stdout.String(), stderr.String(), nil
+	stderrPipe, err := session.StderrPipe()
+	if err != nil {
+		return "", "", fmt.Errorf("failed to create stderr pipe: %w", err)
+	}
+
+	var stdoutBuf, stderrBuf bytes.Buffer
+
+	// Create channels to signal completion of stdout and stderr streaming
+	doneOut := make(chan error)
+	doneErr := make(chan error)
+
+	// Stream stdout
+	go func() {
+		multiWriter := io.MultiWriter(&stdoutBuf, writerFunc(args.OutputCallback))
+		_, err := io.Copy(multiWriter, stdoutPipe)
+		doneOut <- err
+	}()
+
+	// Stream stderr
+	go func() {
+		multiWriter := io.MultiWriter(&stderrBuf, writerFunc(args.ErrorCallback))
+		_, err := io.Copy(multiWriter, stderrPipe)
+		doneErr <- err
+	}()
+
+	// Run the command
+	if err := session.Start(args.Command); err != nil {
+		return "", "", fmt.Errorf("failed to start command: %w", err)
+	}
+
+	// Wait for stdout and stderr to finish streaming
+	if err := <-doneOut; err != nil {
+		return "", "", fmt.Errorf("error while streaming stdout: %w", err)
+	}
+	if err := <-doneErr; err != nil {
+		return "", "", fmt.Errorf("error while streaming stderr: %w", err)
+	}
+
+	// Wait for the session to complete
+	if err := session.Wait(); err != nil {
+		return stdoutBuf.String(), stderrBuf.String(), fmt.Errorf("failed to execute command: %w", err)
+	}
+
+	return stdoutBuf.String(), stderrBuf.String(), nil
 }
 
 func NewSsh() *Ssh {

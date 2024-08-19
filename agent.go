@@ -93,21 +93,25 @@ func (a *Agent) Run(opts ...RunOption) error {
 			return errors.Join(errors.New("could dump workflow config"), err)
 		}
 
-		_, outputErr, err := a.ssh.ExecuteCommand(sshClient, fmt.Sprintf("echo '%s' > %s", *content, destinationFilePath))
+		_, _, err = a.ssh.ExecuteCommand(ExecuteCommandArgs{
+			Client:         sshClient,
+			Command:        fmt.Sprintf("echo '%s' > %s", *content, destinationFilePath),
+			OutputCallback: func(s string) {},
+			ErrorCallback:  func(s string) { fmt.Println("> ", s) },
+		})
 		if err != nil {
-			log.Println(outputErr)
-
 			return errors.Join(errors.New("could generate workflow file"), err)
 		}
 
-		output, outputErr, err := a.ssh.ExecuteCommand(sshClient, fmt.Sprintf("~/.storm/bin/storm run %s", destinationFilePath))
+		_, _, err = a.ssh.ExecuteCommand(ExecuteCommandArgs{
+			Client:         sshClient,
+			Command:        fmt.Sprintf("~/.storm/bin/storm run %s", destinationFilePath),
+			OutputCallback: func(s string) { fmt.Println(s) },
+			ErrorCallback:  func(s string) { fmt.Println("> ", s) },
+		})
 		if err != nil {
-			log.Println(outputErr)
-
 			return errors.Join(errors.New("could not run workflow"), err)
 		}
-
-		fmt.Println(output)
 	}
 
 	return nil
@@ -140,29 +144,24 @@ func (a *Agent) InstallDev(ic InventoryConfig) error {
 
 		fmt.Print("Installing storm on server ... ")
 
-		_, _, err = a.ssh.ExecuteCommand(sshClient, "which ~/.storm/bin/storm")
-
+		err = a.ssh.CopyTo(sshClient, "./storm", fmt.Sprintf("/home/%s/.storm/bin/storm", server.User))
 		if err != nil {
-			err := a.ssh.CopyTo(sshClient, "./storm", fmt.Sprintf("/home/%s/.storm/bin/storm", server.User))
-			if err != nil {
-				fmt.Print(errors.Join(errors.New("ssh can't copy file"), err))
+			fmt.Print(errors.Join(errors.New("ssh can't copy file"), err))
 
-				return err
-			}
-
-			_, stdErr, err := a.ssh.ExecuteCommand(sshClient, "chmod +x ~/.storm/bin/storm")
-			if err != nil {
-				fmt.Print(stdErr)
-
-				return err
-			}
-
-			fmt.Println("Storm is Ready!")
-		} else {
-			fmt.Println("Storm is already installed.")
+			return err
 		}
 
-		fmt.Print("\n*****************************\n\n")
+		_, _, err = a.ssh.ExecuteCommand(ExecuteCommandArgs{
+			Client:         sshClient,
+			Command:        "chmod +x ~/.storm/bin/storm",
+			OutputCallback: func(s string) {},
+			ErrorCallback:  func(s string) { fmt.Println("> ", s) },
+		})
+		if err != nil {
+			return err
+		}
+
+		fmt.Println("Storm is Ready!")
 	}
 
 	return nil
@@ -183,23 +182,29 @@ func (a *Agent) InstallProd(ic InventoryConfig) error {
 		}
 
 		platform := strings.Split(runtime.GOOS, "/")[0]
-		fmt.Printf("Installing storm on %s server ... ", platform)
+		fmt.Printf("Installing storm on %s server ... \n", platform)
 
 		switch platform {
 		case "windows":
-			_, _, err := a.ssh.ExecuteCommand(
-				sshClient,
-				"powershell -c irm https://raw.githubusercontent.com/Overal-X/formatio.storm/main/scripts/install.sh | iex",
-			)
+			_, _, err := a.ssh.ExecuteCommand(ExecuteCommandArgs{
+				Client:         sshClient,
+				Command:        "powershell -c irm https://raw.githubusercontent.com/Overal-X/formatio.storm/main/scripts/install.sh | iex",
+				OutputCallback: func(s string) {},
+				ErrorCallback:  func(s string) {},
+			})
 			if err != nil {
 				return errors.Join(err, errors.New("build failed; could not install storm"))
 			}
 		case "linux":
 		case "darwin":
-			_, _, err = a.ssh.ExecuteCommand(
-				sshClient,
-				"curl -fsSL https://raw.githubusercontent.com/Overal-X/formatio.storm/main/scripts/install.sh | bash",
-			)
+			_, _, err := a.ssh.ExecuteCommand(ExecuteCommandArgs{
+				Client:  sshClient,
+				Command: "curl -fsSL https://raw.githubusercontent.com/Overal-X/formatio.storm/main/scripts/install.sh | bash",
+				OutputCallback: func(s string) {
+					fmt.Println("> ", s)
+				},
+				ErrorCallback: func(s string) {},
+			})
 			if err != nil {
 				return errors.Join(err, errors.New("build failed; could not install storm"))
 			}
@@ -272,7 +277,12 @@ func (a *Agent) Uninstall(args UninstallArgs) error {
 			return err
 		}
 
-		_, _, err = a.ssh.ExecuteCommand(sshClient, "which ~/.storm/bin/storm")
+		_, _, err = a.ssh.ExecuteCommand(ExecuteCommandArgs{
+			Client:         sshClient,
+			Command:        "which ~/.storm/bin/storm",
+			OutputCallback: func(s string) {},
+			ErrorCallback:  func(s string) {},
+		})
 		if err != nil {
 			fmt.Println("Storm is not installed.")
 
@@ -281,7 +291,12 @@ func (a *Agent) Uninstall(args UninstallArgs) error {
 
 		fmt.Println("Removing storm from server ... ")
 
-		_, _, err = a.ssh.ExecuteCommand(sshClient, "rm -rf ~/.storm/")
+		_, _, err = a.ssh.ExecuteCommand(ExecuteCommandArgs{
+			Client:         sshClient,
+			Command:        "rm -rf ~/.storm/",
+			OutputCallback: func(s string) {},
+			ErrorCallback:  func(s string) {},
+		})
 		if err != nil {
 			return errors.Join(errors.New("cannot remove ~/.storm/"), err)
 		}
