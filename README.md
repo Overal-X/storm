@@ -47,7 +47,7 @@ $ storm run ./samples/basic/workflow.yaml
 
 # Bug
 
-- [ ] Execute workflow jobs in the order they appear
+- [x] Execute workflow jobs in the order they appear
 
 # Development
 
