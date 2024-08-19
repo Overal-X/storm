@@ -222,7 +222,7 @@ type InstallArgs struct {
 }
 
 func (a *Agent) Install(args InstallArgs) error {
-	var ic *InventoryConfig
+	var ic *InventoryConfig = &args.Ic
 
 	if args.If != "" {
 		_ic, err := a.inventory.Load(args.If)
@@ -242,10 +242,21 @@ func (a *Agent) Install(args InstallArgs) error {
 	}
 }
 
-func (a *Agent) Uninstall(inventory string) error {
-	ic, err := a.inventory.Load(inventory)
-	if err != nil {
-		return err
+type UninstallArgs struct {
+	If string
+	Ic InventoryConfig
+}
+
+func (a *Agent) Uninstall(args UninstallArgs) error {
+	var ic *InventoryConfig = &args.Ic
+
+	if args.If != "" {
+		_ic, err := a.inventory.Load(args.If)
+		if err != nil {
+			return err
+		}
+
+		ic = _ic
 	}
 
 	for _, server := range ic.Servers {

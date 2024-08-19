@@ -73,7 +73,7 @@ var agentUninstallCmd = &cobra.Command{
 		inventoryFile, _ := cmd.Flags().GetString("inventory")
 
 		agent := storm.NewAgent()
-		err := agent.Uninstall(inventoryFile)
+		err := agent.Uninstall(storm.UninstallArgs{If: inventoryFile})
 		if err != nil {
 			fmt.Println(err)
 			os.Exit(1)
