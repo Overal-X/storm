@@ -126,8 +126,8 @@ func main() {
 	agentRunWorkflowCmd.Flags().StringP("inventory", "i", "./inventory.yaml", "formatio storm inventory")
 	agentCmd.AddCommand(agentRunWorkflowCmd)
 
-	runWorkflowCmd.Flags().BoolP("trash-workflow", "t", false, "remove workflow file if the workflow is complete")
-	runWorkflowCmd.Flags().StringP("directory", "d", "", "directory to run the workflow from")
+	runWorkflowCmd.Flags().BoolP("trash-workflow", "t", true, "remove workflow file if the workflow is complete")
+	runWorkflowCmd.Flags().StringP("directory", "d", ".", "directory to run the workflow from")
 	rootCmd.AddCommand(runWorkflowCmd)
 
 	rootCmd.AddCommand(agentCmd)
