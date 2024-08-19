@@ -1,5 +1,5 @@
 # Default version
-$DefaultVersion = "v0.0.6"
+$DefaultVersion = "v0.0.7"
 
 # Get the version from the command line argument or use default
 $Version = $args[0]
