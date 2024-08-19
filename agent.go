@@ -114,7 +114,7 @@ func (a *Agent) Run(opts ...RunOption) error {
 }
 
 // This is meant for testing locally or in CI
-func (a *Agent) InstallDev(inventory string) error {
+func (a *Agent) InstallDev(ic InventoryConfig) error {
 	os.Setenv("GOOS", "linux")
 	os.Setenv("GOARCH", "arm64")
 
@@ -124,11 +124,6 @@ func (a *Agent) InstallDev(inventory string) error {
 	}
 
 	defer os.Remove("./storm")
-
-	ic, err := a.inventory.Load(inventory)
-	if err != nil {
-		return err
-	}
 
 	for _, server := range ic.Servers {
 		fmt.Printf("Server: [%s]\n", server.Name)
@@ -173,12 +168,7 @@ func (a *Agent) InstallDev(inventory string) error {
 	return nil
 }
 
-func (a *Agent) InstallProd(inventory string) error {
-	ic, err := a.inventory.Load(inventory)
-	if err != nil {
-		return err
-	}
-
+func (a *Agent) InstallProd(ic InventoryConfig) error {
 	for _, server := range ic.Servers {
 		fmt.Printf("Server: [%s]\n", server.Name)
 
@@ -223,12 +213,30 @@ func (a *Agent) InstallProd(inventory string) error {
 	return nil
 }
 
-func (a *Agent) Install(inventory string, mode string) error {
-	switch mode {
+type InstallArgs struct {
+	If string
+	Ic InventoryConfig
+
+	// Installation mode; options are `dev` or `prod`
+	Mode string
+}
+
+func (a *Agent) Install(args InstallArgs) error {
+	var ic *InventoryConfig
+
+	if args.If != "" {
+		_ic, err := a.inventory.Load(args.If)
+		if err != nil {
+			return nil
+		}
+		ic = _ic
+	}
+
+	switch args.Mode {
 	case "dev":
-		return a.InstallDev(inventory)
+		return a.InstallDev(*ic)
 	case "prod":
-		return a.InstallProd(inventory)
+		return a.InstallProd(*ic)
 	default:
 		return errors.New("installation mode not supported")
 	}
