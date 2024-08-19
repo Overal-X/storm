@@ -3,14 +3,30 @@ package main
 import (
 	"fmt"
 	"os"
+	"time"
 
 	storm "github.com/Overal-X/formatio.storm"
 	"github.com/spf13/cobra"
 )
 
+var (
+	version   = "dev" // default value
+	commit    = "none"
+	buildDate = time.Now()
+)
+
 var rootCmd = &cobra.Command{
 	Use:   "storm",
 	Short: "Formatio Storm",
+}
+
+var versionCmd = &cobra.Command{
+	Use:   "version",
+	Short: "Print the version number",
+	Long:  `All software has versions. This is the version of your application.`,
+	Run: func(cmd *cobra.Command, args []string) {
+		fmt.Printf("Version: %s\nCommit: %s\nBuild Date: %s\n", version, commit, buildDate)
+	},
 }
 
 var agentCmd = &cobra.Command{
@@ -41,7 +57,10 @@ var agentInstallCmd = &cobra.Command{
 		installationMode, _ := cmd.Flags().GetString("mode")
 
 		agent := storm.NewAgent()
-		err := agent.Install(inventoryFile, installationMode)
+		err := agent.Install(storm.InstallArgs{
+			If:   inventoryFile,
+			Mode: installationMode,
+		})
 		if err != nil {
 			fmt.Println(err)
 			os.Exit(1)
@@ -96,6 +115,8 @@ var runWorkflowCmd = &cobra.Command{
 }
 
 func main() {
+	rootCmd.AddCommand(versionCmd)
+
 	agentInstallCmd.Flags().StringP("inventory", "i", "./inventory.yaml", "formatio storm inventory")
 	agentInstallCmd.Flags().StringP("mode", "m", "prod", "formatio storm installation type (prod or dev)")
 	agentCmd.AddCommand(agentInstallCmd)
