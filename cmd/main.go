@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"os"
-	"time"
 
 	storm "github.com/Overal-X/formatio.storm"
 	"github.com/spf13/cobra"
@@ -12,7 +11,7 @@ import (
 var (
 	version   = "dev" // default value
 	commit    = "none"
-	buildDate = time.Now()
+	buildDate = "unknown"
 )
 
 var rootCmd = &cobra.Command{
