@@ -40,7 +40,7 @@ func (s *Ssh) Authenticate(args AuthenticateArgs) (*ssh.Client, error) {
 	// Connect to the SSH server
 	client, err := ssh.Dial("tcp", fmt.Sprintf("%s:%d", args.Host, args.Port), sshConfig)
 	if err != nil {
-		log.Fatalf("Failed to dial: %v", err)
+		log.Printf("Failed to dial: %v\n", err)
 
 		return nil, errors.Join(errors.New("ssh authentication failed"), err)
 	}
@@ -66,7 +66,7 @@ func (s *Ssh) CopyTo(client *ssh.Client, source string, destination string) erro
 	// Create an SFTP client
 	sftpClient, err := sftp.NewClient(client)
 	if err != nil {
-		log.Fatalf("Failed to create SFTP client: %v", err)
+		log.Printf("Failed to create SFTP client: %v\n", err)
 
 		return err
 	}
@@ -82,7 +82,7 @@ func (s *Ssh) CopyTo(client *ssh.Client, source string, destination string) erro
 	// Open the local file
 	localFile, err := os.Open(source)
 	if err != nil {
-		log.Fatalf("Failed to open local file: %v", err)
+		log.Printf("Failed to open local file: %v\n", err)
 
 		return err
 	}
@@ -91,7 +91,7 @@ func (s *Ssh) CopyTo(client *ssh.Client, source string, destination string) erro
 	// Create the remote file
 	remoteFile, err := sftpClient.Create(destination)
 	if err != nil {
-		log.Fatalf("Failed to create remote file: %v", err)
+		log.Printf("Failed to create remote file: %v\n", err)
 
 		return err
 	}
@@ -99,7 +99,7 @@ func (s *Ssh) CopyTo(client *ssh.Client, source string, destination string) erro
 
 	// Copy the file from local to remote
 	if _, err := localFile.WriteTo(remoteFile); err != nil {
-		log.Fatalf("Failed to write file to remote server: %v", err)
+		log.Printf("Failed to write file to remote server: %v\n", err)
 
 		return err
 	}
