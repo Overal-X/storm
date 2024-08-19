@@ -7,13 +7,13 @@ Storm is an automation agent that helps to run workflows on remote or local mach
 For Linux and MacOS
 
 ```sh
-$ curl -fsSL https://raw.githubusercontent.com/Overal-X/formatio.storm/main/scripts/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/Overal-X/formatio.storm/main/scripts/install.sh | bash
 ```
 
 For Windows
 
 ```sh
-$ irm https://raw.githubusercontent.com/Overal-X/formatio.storm/main/scripts/install.ps1 | iex
+irm https://raw.githubusercontent.com/Overal-X/formatio.storm/main/scripts/install.ps1 | iex
 ```
 
 Or download binaries from [release page](https://github.com/Overal-X/formatio.storm/releases)
@@ -25,14 +25,14 @@ With the example files
 Run against remote machines from inventory
 
 ```sh
-$ storm agent install -i ./samples/basic/inventory.yaml
-$ storm agent run -i ./samples/basic/inventory.yaml ./samples/basic/workflow.yaml
+storm agent install -i ./samples/basic/inventory.yaml
+storm agent run -i ./samples/basic/inventory.yaml ./samples/basic/workflow.yaml
 ```
 
 Run worklow on current host
 
 ```sh
-$ storm run ./samples/basic/workflow.yaml
+storm run ./samples/basic/workflow.yaml
 ```
 
 # Features
@@ -47,12 +47,12 @@ $ storm run ./samples/basic/workflow.yaml
 
 # Bug
 
-- [ ] Execute workflow jobs in the order they appear
+- [x] Execute workflow jobs in the order they appear
 
 # Development
 
 ```sh
-$ git clone git@github.com:Overal-X/formatio.storm.git
-$ go mod tidy
-$ go build -o storm
+git clone git@github.com:Overal-X/formatio.storm.git
+go mod tidy
+go build -o storm
 ```
