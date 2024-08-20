@@ -29,3 +29,5 @@ go.work.sum
 env.yaml
 
 dist/
+
+inventory.yaml
