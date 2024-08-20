@@ -63,12 +63,15 @@ func (w *Workflow) RunWithConfig(workflow WorkflowConfig) error {
 				fmt.Printf("-> %s\n", step.Name)
 				fmt.Printf("$ %s \n", step.Run)
 
-				return w.Execute(ExecuteArgs{
+				err := w.Execute(ExecuteArgs{
 					Directory:      workflow.Directory,
 					Command:        step.Run,
 					OutputCallback: func(s string) { fmt.Println("> ", s) },
 					ErrorCallback:  func(s string) { fmt.Println("> ", s) },
 				})
+				if err != nil {
+					return err
+				}
 			}
 
 			return nil
