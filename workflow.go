@@ -36,30 +36,56 @@ func (w *Workflow) Dump(content WorkflowConfig) (*string, error) {
 	return &outStr, err
 }
 
+type State struct {
+	IsSuccessful bool
+	IsCompleted  bool
+}
+
+type JobState map[string]State
+
 func (w *Workflow) RunWithConfig(workflow WorkflowConfig) error {
+	jobState := make(JobState, 0)
+
 	for _, job := range workflow.Jobs {
+		// TODO: handle error for when `job.Needs` is not found in `jobState`; aka, don't exist
+		if job.Needs != "" && !jobState[job.Needs].IsCompleted && !jobState[job.Needs].IsSuccessful {
+			return fmt.Errorf("> dependencies error, %s job failed", job.Needs)
+		}
+
 		start := time.Now()
 
-		fmt.Printf("[%s]\n", job.Name)
-		for _, step := range job.Steps {
-			fmt.Printf("-> %s\n", step.Name)
-			fmt.Printf("$ %s \n", step.Run)
-			err := w.Execute(ExecuteArgs{
-				Directory:      workflow.Directory,
-				Command:        step.Run,
-				OutputCallback: func(s string) { fmt.Println("> ", s) },
-				ErrorCallback:  func(s string) { fmt.Println("> ", s) },
-			})
+		jobState[job.Name] = State{IsSuccessful: true, IsCompleted: true}
 
-			if err != nil {
-				fmt.Printf("> %s \n", err)
+		fmt.Printf("[%s]\n", job.Name)
+
+		err := func() error {
+			for _, step := range job.Steps {
+				fmt.Printf("-> %s\n", step.Name)
+				fmt.Printf("$ %s \n", step.Run)
+
+				return w.Execute(ExecuteArgs{
+					Directory:      workflow.Directory,
+					Command:        step.Run,
+					OutputCallback: func(s string) { fmt.Println("> ", s) },
+					ErrorCallback:  func(s string) { fmt.Println("> ", s) },
+				})
 			}
-		}
+
+			return nil
+		}()
 
 		end := time.Now()
 		duration := end.Sub(start)
 
 		fmt.Printf("Took %fs to run.\n\n", duration.Seconds())
+
+		if err != nil {
+			state := jobState[job.Name]
+			state.IsSuccessful = false
+			state.IsCompleted = false
+
+			jobState[job.Name] = state
+		}
 	}
 
 	return nil
