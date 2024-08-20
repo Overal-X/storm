@@ -9,20 +9,20 @@ jobs:
 
     steps:
       - name: Install essential utils
-        run: sudo apt update -y && sudo apt install -y build-essential unzip
+        run: sud apt update -y && sudo apt install -y build-essential unzip
 
-      # - name: Install Bun
-      #   run: |
-      #     curl -fsSL https://bun.sh/install | bash
-      #     grep -qxF 'export BUN_INSTALL="$HOME/.bun"' ~/.bashrc || echo 'export BUN_INSTALL="$HOME/.bun"' >> ~/.bashrc
-      #     grep -qxF 'export PATH="$BUN_INSTALL/bin:$PATH"' ~/.bashrc || echo 'export PATH="$BUN_INSTALL/bin:$PATH"' >> ~/.bashrc
+      - name: Install Bun
+        run: |
+          curl -fsSL https://bun.sh/install | bash
+          grep -qxF 'export PATH="$HOME/.bun/bin:$PATH"' $HOME/.bashrc || echo 'export PATH="$HOME/.bun/bin:$PATH"' >> $HOME/.bashrc
+          source $HOME/.bashrc
 
       - name: Check Bun version
         run: bun --version
 
   - name: test
     runs-on: self-hosted
-    needs: prepare
+    needs: build
 
     steps:
       - name: Testing
@@ -30,7 +30,7 @@ jobs:
 
   - name: deploy
     runs-on: self-hosted
-    needs: prepare
+    needs: test
 
     steps:
       - name: Deploying
