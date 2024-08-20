@@ -42,6 +42,14 @@ func (w *Workflow) RunWithConfig(workflow WorkflowConfig) error {
 	for _, job := range workflow.Jobs {
 		jobState[job.Name] = State{IsSuccessful: true, IsCompleted: true}
 
+		// TODO: handle error for when `job.Needs` is not found in `jobState`; aka, don't exist
+		if job.Needs != "" && (!jobState[job.Needs].IsCompleted || !jobState[job.Needs].IsSuccessful) {
+			err := fmt.Errorf("> dependencies error, %s job failed", job.Needs)
+			fmt.Println(err)
+
+			return err
+		}
+
 		start := time.Now()
 
 		fmt.Printf("[%s]\n", job.Name)
@@ -76,14 +84,6 @@ func (w *Workflow) RunWithConfig(workflow WorkflowConfig) error {
 			state.IsCompleted = false
 
 			jobState[job.Name] = state
-		}
-
-		// TODO: handle error for when `job.Needs` is not found in `jobState`; aka, don't exist
-		if job.Needs != "" && (!jobState[job.Needs].IsCompleted || !jobState[job.Needs].IsSuccessful) {
-			err := fmt.Errorf("> dependencies error, %s job failed", job.Needs)
-			fmt.Println(err)
-
-			return err
 		}
 	}
 

@@ -10,14 +10,14 @@ jobs:
         run: ls -la
 
       - name: Temp
-        run: curl -fsSL https://bun.sh/install | bassh
+        run: echo "curl -fsSL https://bun.sh/install | bash"
 
       - name: Building
         run: python3 --version && echo  "... building ..."
 
   - name: test
     runs-on: self-hosted
-    needs: prepare
+    needs: build
 
     steps:
       - name: Testing
@@ -25,7 +25,7 @@ jobs:
 
   - name: deploy
     runs-on: self-hosted
-    needs: prepare
+    needs: test
 
     steps:
       - name: Deploying
