@@ -9,7 +9,7 @@ jobs:
 
     steps:
       - name: Install essential utils
-        run: sud apt update -y && sudo apt install -y build-essential unzip
+        run: sudo apt update -y && sudo apt install -y build-essential unzip
 
       - name: Install Bun
         run: |
