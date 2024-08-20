@@ -43,7 +43,6 @@ var agentRunWorkflowCmd = &cobra.Command{
 		agent := storm.NewAgent()
 		err := agent.Run(agent.WithFiles(workflowFile, inventoryFile))
 		if err != nil {
-			fmt.Println(err)
 			os.Exit(1)
 		}
 	},
@@ -61,7 +60,6 @@ var agentInstallCmd = &cobra.Command{
 			Mode: installationMode,
 		})
 		if err != nil {
-			fmt.Println(err)
 			os.Exit(1)
 		}
 	},
@@ -75,7 +73,6 @@ var agentUninstallCmd = &cobra.Command{
 		agent := storm.NewAgent()
 		err := agent.Uninstall(storm.UninstallArgs{If: inventoryFile})
 		if err != nil {
-			fmt.Println(err)
 			os.Exit(1)
 		}
 	},
@@ -97,7 +94,6 @@ var runWorkflowCmd = &cobra.Command{
 
 		wc, err := workflow.Load(workflowFile)
 		if err != nil {
-			fmt.Println(err)
 			os.Exit(1)
 		}
 
@@ -107,7 +103,6 @@ var runWorkflowCmd = &cobra.Command{
 
 		err = workflow.RunWithConfig(*wc)
 		if err != nil {
-			fmt.Println(err)
 			os.Exit(1)
 		}
 	},
