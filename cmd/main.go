@@ -97,7 +97,7 @@ var runWorkflowCmd = &cobra.Command{
 			os.Exit(1)
 		}
 
-		if directory != "" {
+		if wc.Directory == "" && directory != "" {
 			wc.Directory = directory
 		}
 
