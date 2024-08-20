@@ -14,14 +14,7 @@ import (
 type Workflow struct{}
 
 func (w *Workflow) Load(file string) (*WorkflowConfig, error) {
-	// dir, err := os.Getwd()
-	// if err != nil {
-	// 	return nil, errors.Join(errors.New("could not get current directory"), err)
-	// }
-
-	workflow := WorkflowConfig{
-		// Directory: dir,
-	}
+	workflow := WorkflowConfig{}
 
 	fileContent, _ := os.ReadFile(file)
 	yaml.Unmarshal([]byte(fileContent), &workflow)
@@ -117,10 +110,17 @@ func (w *Workflow) Execute(args ExecuteArgs) error {
 	// Trim any leading/trailing whitespace
 	command := strings.TrimSpace(args.Command)
 
-	err := os.Chdir(args.Directory)
+	currentDirectory, err := os.Getwd()
+	if err != nil {
+		return fmt.Errorf("cannot get current directory %w", err)
+	}
+
+	err = os.Chdir(args.Directory)
 	if err != nil {
 		return fmt.Errorf("cannot change directory %w", err)
 	}
+
+	defer os.Chdir(currentDirectory)
 
 	currentCmd := exec.Command("/bin/bash", "-c", command)
 
