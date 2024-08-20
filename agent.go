@@ -107,10 +107,10 @@ func (a *Agent) Run(opts ...RunOption) error {
 			Client:         sshClient,
 			Command:        fmt.Sprintf("~/.storm/bin/storm run %s", destinationFilePath),
 			OutputCallback: func(s string) { fmt.Println(s) },
-			ErrorCallback:  func(s string) { fmt.Println("> ", s) },
+			ErrorCallback:  func(s string) { fmt.Println(s) },
 		})
 		if err != nil {
-			return errors.Join(errors.New("could not run workflow"), err)
+			return err
 		}
 	}
 
