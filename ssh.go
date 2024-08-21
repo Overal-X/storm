@@ -17,26 +17,35 @@ import (
 type Ssh struct{}
 
 type AuthenticateArgs struct {
-	User     string
-	Password string
-	Host     string
-	Port     int
+	User          string
+	Password      string
+	Host          string
+	Port          int
+	PrivateSshKey string
 }
 
 func (s *Ssh) Authenticate(args AuthenticateArgs) (*ssh.Client, error) {
-	sshConfig := &ssh.ClientConfig{
-		User: args.User,
-		Auth: []ssh.AuthMethod{
-			ssh.Password(args.Password), // Use a password
-		},
-		// TODO: For production, use a more secure host key callback
-		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
+	signers := make([]ssh.AuthMethod, 0)
+
+	if args.PrivateSshKey == "" && args.Password == "" {
+		return nil, errors.New("ssh key or password is required")
 	}
 
-	if args.Password != "" {
-		sshConfig.Auth = []ssh.AuthMethod{ssh.Password(args.Password)}
+	if args.PrivateSshKey != "" {
+		privateKey, err := ssh.ParsePrivateKey([]byte(args.PrivateSshKey))
+		if err != nil {
+			return nil, fmt.Errorf("failed to parse private key: %w", err)
+		}
+		signers = append(signers, ssh.PublicKeys(privateKey))
 	} else {
-		sshConfig.Auth = []ssh.AuthMethod{ssh.PublicKeys()}
+		signers = append(signers, ssh.Password(args.Password))
+	}
+
+	sshConfig := &ssh.ClientConfig{
+		User: args.User,
+		Auth: signers,
+		// TODO: For production, use a more secure host key callback
+		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
 	}
 
 	// Connect to the SSH server
