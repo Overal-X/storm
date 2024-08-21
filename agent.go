@@ -17,26 +17,26 @@ type Agent struct {
 }
 
 type RunArgs struct {
-	Wf string
-	If string
+	Wf *string
+	If *string
 
-	Wc WorkflowConfig
-	Ic InventoryConfig
+	Wc *WorkflowConfig
+	Ic *InventoryConfig
 }
 
 type RunOption func(*RunArgs)
 
-func (a *Agent) WithConfigs(w WorkflowConfig, i InventoryConfig) RunOption {
+func (a *Agent) AgentWithConfigs(w WorkflowConfig, i InventoryConfig) RunOption {
 	return func(ra *RunArgs) {
-		ra.Wc = w
-		ra.Ic = i
+		ra.Wc = &w
+		ra.Ic = &i
 	}
 }
 
-func (a *Agent) WithFiles(w string, i string) RunOption {
+func (a *Agent) AgentWithFiles(w string, i string) RunOption {
 	return func(ra *RunArgs) {
-		ra.Wf = w
-		ra.If = i
+		ra.Wf = &w
+		ra.If = &i
 	}
 }
 
@@ -49,21 +49,21 @@ func (a *Agent) Run(opts ...RunOption) error {
 		opt(&args)
 	}
 
-	if args.Wf != "" && args.If != "" {
-		_wc, err := a.workflow.Load(args.Wf)
+	if args.Wf != nil && args.If != nil {
+		_wc, err := a.workflow.Load(*args.Wf)
 		if err != nil {
 			return err
 		}
 		wc = _wc
 
-		_ic, err := a.inventory.Load(args.If)
+		_ic, err := a.inventory.Load(*args.If)
 		if err != nil {
 			return err
 		}
 		ic = _ic
 	} else {
-		wc = &args.Wc
-		ic = &args.Ic
+		wc = args.Wc
+		ic = args.Ic
 	}
 
 	if wc == nil && ic == nil {
@@ -183,7 +183,7 @@ func (a *Agent) InstallProd(ic InventoryConfig) error {
 		}
 
 		platform := strings.Split(runtime.GOOS, "/")[0]
-		fmt.Printf("Installing storm on %s server ... \n", platform)
+		fmt.Println("Installing storm on server ... ")
 
 		switch platform {
 		case "windows":
