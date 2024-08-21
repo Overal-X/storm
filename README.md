@@ -4,6 +4,12 @@ Storm is an automation agent that helps to run workflows on remote or local mach
 
 # Installation
 
+For use in golang
+
+```sh
+go get https://github.com/overal-x/formatio.storm
+```
+
 For Linux and MacOS
 
 ```sh
@@ -35,24 +41,10 @@ Run worklow on current host
 storm run ./samples/basic/workflow.yaml
 ```
 
-# Features
-
-- [x] Read YAML configuration similar to GitHub workflow
-- [x] CLI to send workflow to machines
-- [x] Agent to execute workflows
-- [x] Machine inventory
-- [ ] Execute commands as sudo user
-- [ ] Provide inventory to store sudo user password
-- [ ] Provide inventory to store ssh user password
-
-# Bug
-
-- [x] Execute workflow jobs in the order they appear
-
 # Development
 
 ```sh
 git clone git@github.com:Overal-X/formatio.storm.git
 go mod tidy
-go build -o storm
+go run ./cmd help
 ```
