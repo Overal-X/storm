@@ -52,13 +52,13 @@ changelog:
       - "^test:"
   groups:
     - title: Features
-      regexp: '^.*?feat(\([[:word:]]+\))??!?:.+$'
+      regexp: "^feat.*"
       order: 0
     - title: "Bug fixes"
-      regexp: '^.*?bug(\([[:word:]]+\))??!?:.+$'
+      regexp: "^bug.*"
       order: 1
     - title: "Docs"
-      regexp: '^.*?doc(\([[:word:]]+\))??!?:.+$'
+      regexp: "^doc.*"
       order: 2
     - title: Others
       order: 999
