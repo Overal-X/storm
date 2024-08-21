@@ -41,7 +41,7 @@ var agentRunWorkflowCmd = &cobra.Command{
 		inventoryFile, _ := cmd.Flags().GetString("inventory")
 
 		agent := storm.NewAgent()
-		err := agent.Run(agent.WithFiles(workflowFile, inventoryFile))
+		err := agent.Run(agent.AgentWithFiles(workflowFile, inventoryFile))
 		if err != nil {
 			os.Exit(1)
 		}
@@ -101,7 +101,7 @@ var runWorkflowCmd = &cobra.Command{
 			wc.Directory = directory
 		}
 
-		err = workflow.RunWithConfig(*wc)
+		err = workflow.Run(workflow.WorkflowWithConfig(*wc))
 		if err != nil {
 			os.Exit(1)
 		}
