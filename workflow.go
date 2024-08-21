@@ -2,6 +2,7 @@ package storm
 
 import (
 	"bufio"
+	"errors"
 	"fmt"
 	"os"
 	"os/exec"
@@ -36,10 +37,79 @@ type State struct {
 
 type JobState map[string]State
 
-func (w *Workflow) RunWithConfig(workflow WorkflowConfig) error {
+const (
+	StepOutputTypePlain = iota + 1
+	StepOutputTypeStruct
+)
+
+type StepOutputPlain string
+
+type StepOutputStruct struct {
+	// workflow step path
+	// 	example; `build.installing curl`, means 👇
+	// 	- name: build
+	// 		steps:
+	// 		- name: installing curl
+	// 			run: sudo apt install -y curl
+	Path    string
+	Command string
+	Message string
+}
+
+type WorkflowRunArgs struct {
+	File           *string
+	Config         *WorkflowConfig
+	Callback       func(StepOutputStruct)
+	StepOutputType int
+}
+
+type WorkflowRunOptions func(*WorkflowRunArgs)
+
+func (w *Workflow) WorkflowWithFile(file string) WorkflowRunOptions {
+	return func(wra *WorkflowRunArgs) {
+		wra.File = &file
+	}
+}
+
+func (w *Workflow) WorkflowWithConfig(config WorkflowConfig) WorkflowRunOptions {
+	return func(wra *WorkflowRunArgs) {
+		wra.Config = &config
+	}
+}
+
+func (w *Workflow) WorkflowWithCallback(callback func(StepOutputStruct)) WorkflowRunOptions {
+	return func(wra *WorkflowRunArgs) {
+		wra.Callback = callback
+		wra.StepOutputType = StepOutputTypeStruct
+	}
+}
+
+func (w *Workflow) Run(opts ...WorkflowRunOptions) error {
+	args := WorkflowRunArgs{
+		StepOutputType: StepOutputTypePlain,
+		Callback:       func(sos StepOutputStruct) {},
+	}
+
+	for _, opt := range opts {
+		opt(&args)
+	}
+
+	if args.File == nil && args.Config == nil {
+		return errors.New("either file or config must be specified to run a workflow")
+	}
+
+	if args.File != nil && args.Config == nil {
+		_config, err := w.Load(*args.File)
+		if err != nil {
+			return err
+		}
+
+		args.Config = _config
+	}
+
 	jobState := make(JobState, 0)
 
-	for _, job := range workflow.Jobs {
+	for _, job := range args.Config.Jobs {
 		jobState[job.Name] = State{IsSuccessful: true, IsCompleted: true}
 
 		// TODO: handle error for when `job.Needs` is not found in `jobState`; aka, don't exist
@@ -52,18 +122,35 @@ func (w *Workflow) RunWithConfig(workflow WorkflowConfig) error {
 
 		start := time.Now()
 
-		fmt.Printf("[%s]\n", job.Name)
+		if args.StepOutputType == StepOutputTypePlain {
+			fmt.Printf("[%s]\n", job.Name)
+		}
 
 		err := func() error {
 			for _, step := range job.Steps {
-				fmt.Printf("-> %s\n", step.Name)
-				fmt.Printf("$ %s \n", step.Run)
+				if args.StepOutputType == StepOutputTypePlain {
+					fmt.Printf("-> %s\n", step.Name)
+					fmt.Printf("$ %s \n", step.Run)
+				}
+
+				callback := func(s string) {
+					switch args.StepOutputType {
+					case StepOutputTypePlain:
+						fmt.Println("> ", s)
+					case StepOutputTypeStruct:
+						args.Callback(StepOutputStruct{
+							Path:    fmt.Sprintf("%s.%s", job.Name, step.Name),
+							Command: step.Run,
+							Message: s,
+						})
+					}
+				}
 
 				err := w.Execute(ExecuteArgs{
-					Directory:      workflow.Directory,
+					Directory:      args.Config.Directory,
 					Command:        step.Run,
-					OutputCallback: func(s string) { fmt.Println("> ", s) },
-					ErrorCallback:  func(s string) { fmt.Println("> ", s) },
+					OutputCallback: callback,
+					ErrorCallback:  callback,
 				})
 				if err != nil {
 					return err
@@ -76,7 +163,16 @@ func (w *Workflow) RunWithConfig(workflow WorkflowConfig) error {
 		end := time.Now()
 		duration := end.Sub(start)
 
-		fmt.Printf("Took %fs to run.\n\n", duration.Seconds())
+		switch args.StepOutputType {
+		case StepOutputTypePlain:
+			fmt.Printf("Took %fs to run.\n\n", duration.Seconds())
+		case StepOutputTypeStruct:
+			args.Callback(StepOutputStruct{
+				Path:    "__builtin__.TimeTaken",
+				Command: "TimeTaken",
+				Message: fmt.Sprintf("%fs", duration.Seconds()),
+			})
+		}
 
 		if err != nil {
 			state := jobState[job.Name]
@@ -88,15 +184,6 @@ func (w *Workflow) RunWithConfig(workflow WorkflowConfig) error {
 	}
 
 	return nil
-}
-
-func (w *Workflow) RunWithFile(file string) error {
-	wc, err := w.Load(file)
-	if err != nil {
-		return err
-	}
-
-	return w.RunWithConfig(*wc)
 }
 
 type ExecuteArgs struct {
