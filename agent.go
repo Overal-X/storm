@@ -76,10 +76,11 @@ func (a *Agent) Run(opts ...RunOption) error {
 		fmt.Printf("Server: [%s]\n", server.Name)
 
 		sshClient, err := a.ssh.Authenticate(AuthenticateArgs{
-			Host:     server.Host,
-			Port:     server.Port,
-			User:     server.User,
-			Password: server.SshPassword,
+			Host:          server.Host,
+			Port:          server.Port,
+			User:          server.User,
+			Password:      server.SshPassword,
+			PrivateSshKey: server.PrivateSshKey,
 		})
 		if err != nil {
 			return errors.Join(err, errors.New("authentication failed"))
@@ -133,10 +134,11 @@ func (a *Agent) InstallDev(ic InventoryConfig) error {
 		fmt.Printf("Server: [%s]\n", server.Name)
 
 		sshClient, err := a.ssh.Authenticate(AuthenticateArgs{
-			Host:     server.Host,
-			Port:     server.Port,
-			User:     server.User,
-			Password: server.SshPassword,
+			Host:          server.Host,
+			Port:          server.Port,
+			User:          server.User,
+			Password:      server.SshPassword,
+			PrivateSshKey: server.PrivateSshKey,
 		})
 		if err != nil {
 			return err
@@ -172,10 +174,11 @@ func (a *Agent) InstallProd(ic InventoryConfig) error {
 		fmt.Printf("Server: [%s]\n", server.Name)
 
 		sshClient, err := a.ssh.Authenticate(AuthenticateArgs{
-			Host:     server.Host,
-			Port:     server.Port,
-			User:     server.User,
-			Password: server.SshPassword,
+			Host:          server.Host,
+			Port:          server.Port,
+			User:          server.User,
+			Password:      server.SshPassword,
+			PrivateSshKey: server.PrivateSshKey,
 		})
 		if err != nil {
 			return err
@@ -198,12 +201,10 @@ func (a *Agent) InstallProd(ic InventoryConfig) error {
 		case "linux":
 		case "darwin":
 			_, _, err := a.ssh.ExecuteCommand(ExecuteCommandArgs{
-				Client:  sshClient,
-				Command: "curl -fsSL https://raw.githubusercontent.com/Overal-X/formatio.storm/main/scripts/install.sh | bash",
-				OutputCallback: func(s string) {
-					fmt.Println("> ", s)
-				},
-				ErrorCallback: func(s string) {},
+				Client:         sshClient,
+				Command:        "curl -fsSL https://raw.githubusercontent.com/Overal-X/formatio.storm/main/scripts/install.sh | bash",
+				OutputCallback: func(s string) { fmt.Println("> ", s) },
+				ErrorCallback:  func(s string) { fmt.Println("> ", s) },
 			})
 			if err != nil {
 				return errors.Join(err, errors.New("build failed; could not install storm"))
@@ -232,7 +233,7 @@ func (a *Agent) Install(args InstallArgs) error {
 	if args.If != "" {
 		_ic, err := a.inventory.Load(args.If)
 		if err != nil {
-			return nil
+			return err
 		}
 		ic = _ic
 	}
@@ -268,10 +269,11 @@ func (a *Agent) Uninstall(args UninstallArgs) error {
 		fmt.Printf("Server: [%s]\n", server.Name)
 
 		sshClient, err := a.ssh.Authenticate(AuthenticateArgs{
-			Host:     server.Host,
-			Port:     server.Port,
-			User:     server.User,
-			Password: server.SshPassword,
+			Host:          server.Host,
+			Port:          server.Port,
+			User:          server.User,
+			Password:      server.SshPassword,
+			PrivateSshKey: server.PrivateSshKey,
 		})
 		if err != nil {
 			return err
