@@ -8,14 +8,14 @@ servers:
 
   - name: silly_moser
     host: silly_moser.orb.local
-    port: 22
+    port: 48
     user: formatio
     ssh-pass: password
     sudo-pass: password
 
   - name: stupefied_wescoff
     host: stupefied_wescoff.orb.local
-    port: 22
+    port: 39
     user: formatio
     ssh-pass: password
     sudo-pass: password
