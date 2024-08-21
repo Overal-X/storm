@@ -45,6 +45,7 @@ archives:
         format: zip
 
 changelog:
+  use: github
   sort: asc
   filters:
     exclude:
@@ -52,13 +53,13 @@ changelog:
       - "^test:"
   groups:
     - title: Features
-      regexp: "^feat.*"
+      regexp: '^.*?feat(\([[:word:]]+\))??!?:.+$'
       order: 0
     - title: "Bug fixes"
-      regexp: "^bug.*"
+      regexp: '^.*?(bug|fix)(\([[:word:]]+\))??!?:.+$'
       order: 1
     - title: "Docs"
-      regexp: "^doc.*"
+      regexp: '^.*?(doc|docs)(\([[:word:]]+\))??!?:.+$'
       order: 2
     - title: Others
       order: 999
