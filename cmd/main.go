@@ -5,6 +5,7 @@ import (
 	"os"
 
 	storm "github.com/Overal-X/formatio.storm"
+	"github.com/samber/lo"
 	"github.com/spf13/cobra"
 )
 
@@ -39,9 +40,13 @@ var agentRunWorkflowCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		workflowFile := args[0]
 		inventoryFile, _ := cmd.Flags().GetString("inventory")
+		format, _ := cmd.Flags().GetInt("format")
 
 		agent := storm.NewAgent()
-		err := agent.Run(agent.AgentWithFiles(workflowFile, inventoryFile))
+		err := agent.Run(
+			agent.AgentWithFiles(workflowFile, inventoryFile),
+			agent.AgentWithCallback(func(i interface{}) { fmt.Println(i) }, format),
+		)
 		if err != nil {
 			os.Exit(1)
 		}
@@ -85,6 +90,7 @@ var runWorkflowCmd = &cobra.Command{
 		workflowFile := args[0]
 		trashWorkflow, _ := cmd.Flags().GetBool("trash-workflow")
 		directory, _ := cmd.Flags().GetString("directory")
+		format, _ := cmd.Flags().GetInt("format")
 
 		if trashWorkflow {
 			defer os.Remove(workflowFile)
@@ -97,11 +103,11 @@ var runWorkflowCmd = &cobra.Command{
 			os.Exit(1)
 		}
 
-		if wc.Directory == "" && directory != "" {
-			wc.Directory = directory
-		}
+		wc.Directory = lo.Ternary(wc.Directory == "" && directory != "", directory, wc.Directory)
 
-		err = workflow.Run(workflow.WorkflowWithConfig(*wc))
+		err = workflow.Run(
+			workflow.WorkflowWithConfig(*wc),
+			workflow.WorkflowWithCallback(func(i interface{}) { fmt.Println(i) }, format))
 		if err != nil {
 			os.Exit(1)
 		}
@@ -119,10 +125,12 @@ func main() {
 	agentCmd.AddCommand(agentUninstallCmd)
 
 	agentRunWorkflowCmd.Flags().StringP("inventory", "i", "./inventory.yaml", "formatio storm inventory")
+	agentRunWorkflowCmd.Flags().IntP("format", "f", 1, "available options are; 1 => plain, 2 => struct, 3 => json")
 	agentCmd.AddCommand(agentRunWorkflowCmd)
 
 	runWorkflowCmd.Flags().BoolP("trash-workflow", "t", true, "remove workflow file if the workflow is complete")
 	runWorkflowCmd.Flags().StringP("directory", "d", ".", "directory to run the workflow from")
+	runWorkflowCmd.Flags().IntP("format", "f", 1, "available options are; 1 => plain, 2 => struct, 3 => json")
 	rootCmd.AddCommand(runWorkflowCmd)
 
 	rootCmd.AddCommand(agentCmd)

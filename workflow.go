@@ -2,6 +2,7 @@ package storm
 
 import (
 	"bufio"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"os"
@@ -40,11 +41,12 @@ type JobState map[string]State
 const (
 	StepOutputTypePlain = iota + 1
 	StepOutputTypeStruct
+	StepOutputTypeJson
 )
 
 type StepOutputPlain string
 
-type StepOutputStruct struct {
+type WorkflowStepOutputStruct struct {
 	// workflow step path
 	// 	example; `build.installing curl`, means 👇
 	// 	- name: build
@@ -59,7 +61,7 @@ type StepOutputStruct struct {
 type WorkflowRunArgs struct {
 	File           *string
 	Config         *WorkflowConfig
-	Callback       func(StepOutputStruct)
+	Callback       func(interface{})
 	StepOutputType int
 }
 
@@ -77,17 +79,17 @@ func (w *Workflow) WorkflowWithConfig(config WorkflowConfig) WorkflowRunOptions 
 	}
 }
 
-func (w *Workflow) WorkflowWithCallback(callback func(StepOutputStruct)) WorkflowRunOptions {
+func (w *Workflow) WorkflowWithCallback(callback func(interface{}), sot int) WorkflowRunOptions {
 	return func(wra *WorkflowRunArgs) {
 		wra.Callback = callback
-		wra.StepOutputType = StepOutputTypeStruct
+		wra.StepOutputType = sot
 	}
 }
 
 func (w *Workflow) Run(opts ...WorkflowRunOptions) error {
 	args := WorkflowRunArgs{
 		StepOutputType: StepOutputTypePlain,
-		Callback:       func(sos StepOutputStruct) {},
+		Callback:       func(sos interface{}) {},
 	}
 
 	for _, opt := range opts {
@@ -138,11 +140,24 @@ func (w *Workflow) Run(opts ...WorkflowRunOptions) error {
 					case StepOutputTypePlain:
 						fmt.Println("> ", s)
 					case StepOutputTypeStruct:
-						args.Callback(StepOutputStruct{
+						args.Callback(WorkflowStepOutputStruct{
 							Path:    fmt.Sprintf("%s.%s", job.Name, step.Name),
 							Command: step.Run,
 							Message: s,
 						})
+					case StepOutputTypeJson:
+						payload := WorkflowStepOutputStruct{
+							Path:    fmt.Sprintf("%s.%s", job.Name, step.Name),
+							Command: step.Run,
+							Message: s,
+						}
+						payloadString, err := json.Marshal(&payload)
+						if err != nil {
+							fmt.Println("could not marshel workflow payload to json. reason: ", err)
+							break
+						}
+
+						args.Callback(string(payloadString))
 					}
 				}
 
@@ -167,7 +182,7 @@ func (w *Workflow) Run(opts ...WorkflowRunOptions) error {
 		case StepOutputTypePlain:
 			fmt.Printf("Took %fs to run.\n\n", duration.Seconds())
 		case StepOutputTypeStruct:
-			args.Callback(StepOutputStruct{
+			args.Callback(WorkflowStepOutputStruct{
 				Path:    "__builtin__.TimeTaken",
 				Command: "TimeTaken",
 				Message: fmt.Sprintf("%fs", duration.Seconds()),

@@ -22,6 +22,9 @@ type RunArgs struct {
 
 	Wc *WorkflowConfig
 	Ic *InventoryConfig
+
+	Callback       func(interface{})
+	StepOutputType int
 }
 
 type RunOption func(*RunArgs)
@@ -40,10 +43,19 @@ func (a *Agent) AgentWithFiles(w string, i string) RunOption {
 	}
 }
 
+func (a *Agent) AgentWithCallback(callback func(interface{}), format int) RunOption {
+	return func(ra *RunArgs) {
+		ra.Callback = callback
+		ra.StepOutputType = format
+	}
+}
+
 func (a *Agent) Run(opts ...RunOption) error {
 	var wc *WorkflowConfig
 	var ic *InventoryConfig
-	var args RunArgs
+	args := RunArgs{
+		StepOutputType: StepOutputTypePlain,
+	}
 
 	for _, opt := range opts {
 		opt(&args)
@@ -70,8 +82,18 @@ func (a *Agent) Run(opts ...RunOption) error {
 		return errors.New("invalid inventory and workflow configurations")
 	}
 
+	callback := func(s string) {
+		if args.StepOutputType == StepOutputTypePlain {
+			fmt.Println("> ", s)
+		} else {
+			args.Callback(s)
+		}
+	}
+
 	for _, server := range ic.Servers {
-		fmt.Printf("Server: [%s]\n", server.Name)
+		if args.StepOutputType == StepOutputTypePlain {
+			fmt.Printf("Server: [%s]\n", server.Name)
+		}
 
 		sshClient, err := a.ssh.Authenticate(AuthenticateArgs{
 			Host:          server.Host,
@@ -104,9 +126,9 @@ func (a *Agent) Run(opts ...RunOption) error {
 
 		_, _, err = a.ssh.ExecuteCommand(ExecuteCommandArgs{
 			Client:         sshClient,
-			Command:        fmt.Sprintf("~/.storm/bin/storm run %s", destinationFilePath),
-			OutputCallback: func(s string) { fmt.Println(s) },
-			ErrorCallback:  func(s string) { fmt.Println(s) },
+			Command:        fmt.Sprintf("~/.storm/bin/storm run -f=%d %s", args.StepOutputType, destinationFilePath),
+			OutputCallback: callback,
+			ErrorCallback:  callback,
 		})
 		if err != nil {
 			return err
