@@ -11,8 +11,6 @@ import (
 )
 
 type Agent struct {
-	// ablyClient *AblyClient
-
 	inventory *Inventory
 	workflow  *Workflow
 	ssh       *Ssh
@@ -311,7 +309,6 @@ func (a *Agent) Uninstall(args UninstallArgs) error {
 
 func NewAgent() *Agent {
 	return &Agent{
-		// ablyClient: NewAblyClient(),
 		workflow:  NewWorkflow(),
 		inventory: NewInventory(),
 		ssh:       NewSsh(),
