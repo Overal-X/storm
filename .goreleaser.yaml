@@ -63,11 +63,3 @@ changelog:
       order: 2
     - title: Others
       order: 999
-
-cloudsmiths:
-  - organization: formatio
-    repository: storm
-    distributions:
-      deb: "ubuntu/xenial"
-      alpine: "alpine/v3.8"
-      rpm: "el/7"
