@@ -1,10 +1,10 @@
 servers:
   - name: agitated_dewdney
     host: agitated_dewdney.orb.local
-    port: 22
     user: formatio
     ssh-pass: password
     sudo-pass: password
+    private-ssh-key: ./id_rsa # has more priority than password auth
 
   - name: silly_moser
     host: silly_moser.orb.local
