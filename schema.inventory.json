@@ -1,0 +1,55 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Storm Inventory Schema",
+  "type": "object",
+  "properties": {
+    "servers": {
+      "type": "array",
+      "description": "List of server configurations.",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "A unique name for the server."
+          },
+          "host": {
+            "type": "string",
+            "description": "The hostname or IP address of the server."
+          },
+          "port": {
+            "type": "integer",
+            "description": "The SSH port for the server.",
+            "default": 22
+          },
+          "user": {
+            "type": "string",
+            "description": "The username to use for SSH."
+          },
+          "ssh-pass": {
+            "type": "string",
+            "description": "The SSH password for the user."
+          },
+          "sudo-pass": {
+            "type": "string",
+            "description": "The sudo password for the user."
+          },
+          "private-ssh-key": {
+            "type": "string",
+            "description": "Path to the private SSH key file. This takes priority over password authentication."
+          }
+        },
+        "required": ["name", "host", "user"],
+        "oneOf": [
+          {
+            "required": ["ssh-pass"]
+          },
+          {
+            "required": ["private-ssh-key"]
+          }
+        ]
+      }
+    }
+  },
+  "required": ["servers"]
+}
