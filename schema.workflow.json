@@ -23,6 +23,10 @@
         }
       }
     },
+    "directory": {
+      "type": "string",
+      "description": "Directory to run the workflow from"
+    },
     "jobs": {
       "type": "array",
       "items": {
