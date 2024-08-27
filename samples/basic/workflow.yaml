@@ -1,7 +1,6 @@
-name: Deploy to server
+# yaml-language-server: $schema=https://github.com/Overal-X/formatio.storm/raw/main/schema.workflow.json
 
-on:
-  push:
+name: Deploy to server
 
 jobs:
   - name: build

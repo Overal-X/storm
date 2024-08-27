@@ -1,8 +1,9 @@
+# yaml-language-server: $schema=https://github.com/Overal-X/formatio.storm/raw/main/schema.inventory.json
+
 servers:
   - name: agitated_dewdney
     host: agitated_dewdney.orb.local
     user: formatio
-    ssh-pass: password
     sudo-pass: password
     private-ssh-key: ./id_rsa # has more priority than password auth
 
