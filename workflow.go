@@ -10,6 +10,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/samber/lo"
 	"gopkg.in/yaml.v3"
 )
 
@@ -162,7 +163,7 @@ func (w *Workflow) Run(opts ...WorkflowRunOptions) error {
 				}
 
 				err := w.Execute(ExecuteArgs{
-					Directory:      args.Config.Directory,
+					Directory:      lo.Ternary(step.Directory != "", step.Directory, args.Config.Directory),
 					Command:        step.Run,
 					OutputCallback: callback,
 					ErrorCallback:  callback,
