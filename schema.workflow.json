@@ -53,13 +53,13 @@
                   "type": "string",
                   "description": "The name of the step."
                 },
-                "id": {
-                  "type": "string",
-                  "description": "An identifier for the step."
-                },
                 "run": {
                   "type": "string",
                   "description": "The command to run in this step."
+                },
+                "directory": {
+                  "type": "string",
+                  "description": "Directory to run the workflow from"
                 }
               },
               "required": ["name", "run"]
