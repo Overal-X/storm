@@ -84,7 +84,7 @@ func (a *Agent) Run(opts ...RunOption) error {
 
 	callback := func(s string) {
 		if args.StepOutputType == StepOutputTypePlain {
-			fmt.Println("> ", s)
+			fmt.Println(s)
 		} else {
 			args.Callback(s)
 		}
@@ -118,7 +118,7 @@ func (a *Agent) Run(opts ...RunOption) error {
 			Client:         sshClient,
 			Command:        fmt.Sprintf("echo '%s' > %s", *content, destinationFilePath),
 			OutputCallback: func(s string) {},
-			ErrorCallback:  func(s string) { fmt.Println("> ", s) },
+			ErrorCallback:  func(s string) { fmt.Println(s) },
 		})
 		if err != nil {
 			return errors.Join(errors.New("could generate workflow file"), err)
