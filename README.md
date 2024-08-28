@@ -4,6 +4,7 @@ Storm is an automation agent that helps to run workflows on remote or local mach
 
 # Benchmark / Reviews
 - [Storm vs GitHub Actions (self-hosted runner)](https://www.linkedin.com/posts/struckchure_devops-automatio-github-activity-7234504216193470465-Psf9)
+- [Storm vs Ansible (Coming soon!)](#)
 
 # Installation
 
