@@ -1,4 +1,4 @@
-# Formatio Storm
+# Storm
 
 Storm is an automation agent that helps to run workflows on remote or local machines.
 
