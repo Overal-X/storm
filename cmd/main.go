@@ -53,6 +53,60 @@ var agentRunWorkflowCmd = &cobra.Command{
 	},
 }
 
+var inventoryCmd = &cobra.Command{
+	Use:   "inventory",
+	Short: "Manage inventory with AES encryption",
+}
+
+var encryptInventoryCmd = &cobra.Command{
+	Use: "encrypt",
+	Run: func(cmd *cobra.Command, args []string) {
+		inventoryFile, _ := cmd.Flags().GetString("inventory")
+		encryptionKey, _ := cmd.Flags().GetString("encryption-key")
+
+		encryptedInventory, err := storm.NewInventory().Encrypt(inventoryFile, encryptionKey)
+		if err != nil {
+			fmt.Println(err)
+
+			os.Exit(1)
+		}
+
+		fmt.Println(*encryptedInventory)
+	},
+}
+
+var decryptInventoryCmd = &cobra.Command{
+	Use: "decrypt",
+	Run: func(cmd *cobra.Command, args []string) {
+		encryptedInventory, _ := cmd.Flags().GetString("encrypted-inventory")
+		encryptionKey, _ := cmd.Flags().GetString("encryption-key")
+		format, _ := cmd.Flags().GetString("format")
+
+		var byteEncryptedInventory []byte
+		var err error
+
+		if format == "file" {
+			byteEncryptedInventory, err = os.ReadFile(encryptedInventory)
+			if err != nil {
+				fmt.Println(err)
+
+				os.Exit(1)
+			}
+		} else {
+			byteEncryptedInventory = []byte(encryptedInventory)
+		}
+
+		decryptedInventory, err := storm.NewInventory().Decrypt(string(byteEncryptedInventory), encryptionKey)
+		if err != nil {
+			fmt.Println(err)
+
+			os.Exit(1)
+		}
+
+		fmt.Println(*decryptedInventory)
+	},
+}
+
 var agentInstallCmd = &cobra.Command{
 	Use: "install",
 	Run: func(cmd *cobra.Command, args []string) {
@@ -127,6 +181,16 @@ func main() {
 	agentRunWorkflowCmd.Flags().StringP("inventory", "i", "./inventory.yaml", "formatio storm inventory")
 	agentRunWorkflowCmd.Flags().IntP("format", "f", 1, "available options are; 1 => plain, 2 => struct, 3 => json")
 	agentCmd.AddCommand(agentRunWorkflowCmd)
+
+	inventoryCmd.AddCommand(encryptInventoryCmd)
+	encryptInventoryCmd.Flags().StringP("inventory", "i", "./inventory.yaml", "formatio storm inventory")
+
+	inventoryCmd.AddCommand(decryptInventoryCmd)
+	decryptInventoryCmd.Flags().StringP("encrypted-inventory", "e", "./inventory.yaml.enc", "encrypted inventory file")
+	decryptInventoryCmd.Flags().StringP("format", "f", "file", "available options are; plain, file")
+
+	inventoryCmd.PersistentFlags().StringP("encryption-key", "k", "", "encryption key")
+	rootCmd.AddCommand(inventoryCmd)
 
 	runWorkflowCmd.Flags().BoolP("trash-workflow", "t", true, "remove workflow file if the workflow is complete")
 	runWorkflowCmd.Flags().StringP("directory", "d", ".", "directory to run the workflow from")
