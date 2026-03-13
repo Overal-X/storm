@@ -57,6 +57,10 @@
                   "type": "string",
                   "description": "The command to run in this step."
                 },
+                "shell": {
+                  "type": "string",
+                  "description": "The shell to use for command execution."
+                },
                 "directory": {
                   "type": "string",
                   "description": "Directory to run the workflow from"
