@@ -31,13 +31,6 @@ inputs:
 runs:
   using: composite
   steps:
-    - name: Write SSH key
-      if: ${{ inputs.ssh_key != '' }}
-      shell: bash
-      run: |
-        echo "${{ inputs.ssh_key }}" | base64 -d > "${{ inputs.ssh_output_file }}"
-        chmod 600 "${{ inputs.ssh_output_file }}"
-
     - name: Install storm
       shell: bash
       run: |
@@ -57,6 +50,11 @@ runs:
       run: |
         envsubst '${GITHUB_TOKEN} ${GITHUB_REPO} ${GITHUB_REF}' < "${{ inputs.workflow }}" > .storm/workflow-temp.yaml
         mv .storm/workflow-temp.yaml "${{ inputs.workflow }}"
+
+    - name: Write SSH key
+      if: ${{ inputs.ssh_key != '' }}
+      shell: bash
+      run: echo "${{ inputs.ssh_key }}" | base64 -d > "${{ inputs.ssh_output_file }}"
 
     - name: Install storm agent on remote servers
       shell: bash
