@@ -35,6 +35,7 @@ func (w *Workflow) Dump(content WorkflowConfig) (*string, error) {
 type State struct {
 	IsSuccessful bool
 	IsCompleted  bool
+	Error        error
 }
 
 type JobState map[string]State
@@ -113,14 +114,14 @@ func (w *Workflow) Run(opts ...WorkflowRunOptions) error {
 	jobState := make(JobState, 0)
 
 	for _, job := range args.Config.Jobs {
-		jobState[job.Name] = State{IsSuccessful: true, IsCompleted: true}
+		jobState[job.Name] = State{IsSuccessful: true, IsCompleted: true, Error: nil}
 
 		// TODO: handle error for when `job.Needs` is not found in `jobState`; aka, don't exist
 		if job.Needs != "" && (!jobState[job.Needs].IsCompleted || !jobState[job.Needs].IsSuccessful) {
 			err := fmt.Errorf("> dependencies error, %s job failed", job.Needs)
 			fmt.Println(err)
 
-			return err
+			return jobState[job.Name].Error
 		}
 
 		start := time.Now()
@@ -195,6 +196,7 @@ func (w *Workflow) Run(opts ...WorkflowRunOptions) error {
 			state := jobState[job.Name]
 			state.IsSuccessful = false
 			state.IsCompleted = false
+			state.Error = err
 
 			jobState[job.Name] = state
 		}
@@ -220,7 +222,7 @@ func (w *Workflow) Execute(args ExecuteArgs) error {
 		return fmt.Errorf("cannot get current directory %w", err)
 	}
 
-	err = os.Chdir(args.Directory)
+	err = ChdirOrCreate(args.Directory)
 	if err != nil {
 		return fmt.Errorf("cannot change directory %w", err)
 	}

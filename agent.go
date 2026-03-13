@@ -3,7 +3,6 @@ package storm
 import (
 	"errors"
 	"fmt"
-	"log"
 	"os"
 	"os/exec"
 	"runtime"
@@ -107,18 +106,12 @@ func (a *Agent) Run(opts ...RunOption) error {
 		}
 
 		destinationFilePath := fmt.Sprintf("/home/%s/workflow.yaml", server.User)
-		content, err := a.workflow.Dump(*wc)
-		if err != nil {
-			log.Println(err)
 
-			return errors.Join(errors.New("could dump workflow config"), err)
-		}
-
-		_, _, err = a.ssh.ExecuteCommand(ExecuteCommandArgs{
-			Client:         sshClient,
-			Command:        fmt.Sprintf("echo '%s' > %s", *content, destinationFilePath),
-			OutputCallback: func(s string) {},
-			ErrorCallback:  func(s string) { fmt.Println(s) },
+		err = a.ssh.CopyFile(CopyFileArgs{
+			Client:      sshClient,
+			From:        *args.Wf,
+			To:          destinationFilePath,
+			Permissions: "0655",
 		})
 		if err != nil {
 			return errors.Join(errors.New("could generate workflow file"), err)

@@ -2,6 +2,7 @@ package storm
 
 import (
 	"bytes"
+	"context"
 	"errors"
 	"fmt"
 	"io"
@@ -10,6 +11,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	scp "github.com/bramvdbogaerde/go-scp"
 	"github.com/pkg/sftp"
 	"golang.org/x/crypto/ssh"
 )
@@ -224,6 +226,26 @@ func (s *Ssh) ExecuteCommand(args ExecuteCommandArgs) (string, string, error) {
 	}
 
 	return stdoutBuf.String(), stderrBuf.String(), nil
+}
+
+type CopyFileArgs struct {
+	Client                *ssh.Client
+	From, To, Permissions string
+}
+
+func (s *Ssh) CopyFile(args CopyFileArgs) error {
+	client, err := scp.NewClientBySSH(args.Client)
+	if err != nil {
+		return err
+	}
+
+	// Open a file
+	f, _ := os.Open(args.From)
+
+	defer client.Close()
+	defer f.Close()
+
+	return client.CopyFromFile(context.Background(), *f, args.To, args.Permissions)
 }
 
 func NewSsh() *Ssh {

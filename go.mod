@@ -3,6 +3,7 @@ module github.com/Overal-X/formatio.storm
 go 1.22.0
 
 require (
+	github.com/bramvdbogaerde/go-scp v1.6.0
 	github.com/pkg/sftp v1.13.6
 	github.com/samber/lo v1.47.0
 	github.com/spf13/cobra v1.8.1

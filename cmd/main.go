@@ -45,7 +45,7 @@ var agentRunWorkflowCmd = &cobra.Command{
 		agent := storm.NewAgent()
 		err := agent.Run(
 			agent.AgentWithFiles(workflowFile, inventoryFile),
-			agent.AgentWithCallback(func(i interface{}) { fmt.Println(i) }, format),
+			agent.AgentWithCallback(func(i any) { fmt.Println(i) }, format),
 		)
 		if err != nil {
 			os.Exit(1)
@@ -164,7 +164,8 @@ var runWorkflowCmd = &cobra.Command{
 
 		err = workflow.Run(
 			workflow.WorkflowWithConfig(*wc),
-			workflow.WorkflowWithCallback(func(i interface{}) { fmt.Println(i) }, format))
+			workflow.WorkflowWithCallback(func(i any) { fmt.Println(i) }, format),
+		)
 		if err != nil {
 			fmt.Println(err)
 			os.Exit(1)
