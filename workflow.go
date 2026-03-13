@@ -164,7 +164,7 @@ func (w *Workflow) Run(opts ...WorkflowRunOptions) error {
 
 				err := w.Execute(ExecuteArgs{
 					Directory:      lo.Ternary(step.Directory != "", step.Directory, args.Config.Directory),
-					Shell:          lo.Ternary(step.Shell != "", step.Shell, "sh"),
+					Shell:          lo.Ternary(step.Shell != "", step.Shell, os.Getenv("SHELL")),
 					Command:        step.Run,
 					OutputCallback: callback,
 					ErrorCallback:  callback,
@@ -228,6 +228,7 @@ func (w *Workflow) Execute(args ExecuteArgs) error {
 	defer os.Chdir(currentDirectory)
 
 	currentCmd := exec.Command(args.Shell, "-c", command)
+	currentCmd.Env = os.Environ()
 
 	stdoutPipe, err := currentCmd.StdoutPipe()
 	if err != nil {
