@@ -1,10 +1,20 @@
-# Default version
-$DefaultVersion = "v0.0.19"
+# Resolve the latest version from GitHub Releases API when no explicit version is provided
+$LatestReleaseApi = "https://api.github.com/repos/Overal-X/formatio.storm/releases/latest"
 
-# Get the version from the command line argument or use default
+# Get the version from the command line argument or resolve latest
 $Version = $args[0]
 if (-not $Version) {
-    $Version = $DefaultVersion
+    try {
+        $ReleaseInfo = Invoke-RestMethod -Uri $LatestReleaseApi -Headers @{ Accept = "application/vnd.github+json" }
+        $Version = $ReleaseInfo.tag_name
+        if (-not $Version) {
+            throw "Missing tag_name in GitHub API response"
+        }
+    }
+    catch {
+        Write-Host "Failed to resolve latest release version from GitHub API: $($_.Exception.Message)"
+        exit 1
+    }
 }
 
 # Define the base URL for the release artifacts
@@ -40,6 +50,7 @@ if (-not (Test-Path $DestDir)) {
 }
 
 # Download the file
+Write-Host "Using version: $Version"
 Write-Host "Downloading $File..."
 Invoke-WebRequest -Uri "$BaseUrl/$File" -OutFile "$File"
 

@@ -1,10 +1,26 @@
 #!/bin/bash
 
-# Default version
-DEFAULT_VERSION="v0.0.19"
+# Resolve the latest version from GitHub Releases API when no explicit version is provided
+LATEST_RELEASE_API="https://api.github.com/repos/Overal-X/formatio.storm/releases/latest"
 
-# Get the version from the command line argument or use default
-VERSION=${1:-$DEFAULT_VERSION}
+resolve_latest_version() {
+    local latest_version
+    latest_version=$(curl -fsSL "$LATEST_RELEASE_API" | sed -n 's/.*"tag_name":[[:space:]]*"\([^"]*\)".*/\1/p' | head -n 1)
+
+    if [ -z "$latest_version" ]; then
+        echo "Failed to resolve latest release version from GitHub API" >&2
+        exit 1
+    fi
+
+    echo "$latest_version"
+}
+
+# Get the version from the command line argument or resolve latest
+if [ -n "$1" ]; then
+    VERSION="$1"
+else
+    VERSION=$(resolve_latest_version)
+fi
 
 # Define the base URL for the release artifacts
 BASE_URL="https://github.com/Overal-X/formatio.storm/releases/download/${VERSION}"
@@ -62,6 +78,7 @@ DEST_DIR="$HOME/.storm/bin"
 mkdir -p "$DEST_DIR"
 
 # Download the file
+echo "Using version: $VERSION"
 echo "Downloading $FILE..."
 curl -fsSL "${BASE_URL}/${FILE}" -o "${FILE}"
 
