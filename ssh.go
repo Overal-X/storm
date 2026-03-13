@@ -38,7 +38,9 @@ func (s *Ssh) Authenticate(args AuthenticateArgs) (*ssh.Client, error) {
 		}
 		signers = append(signers, ssh.PublicKeys(privateKey))
 	} else {
-		signers = append(signers, ssh.Password(args.Password))
+		if args.Password != "" {
+			signers = append(signers, ssh.Password(args.Password))
+		}
 	}
 
 	sshConfig := &ssh.ClientConfig{
