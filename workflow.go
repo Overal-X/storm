@@ -62,7 +62,7 @@ type WorkflowStepOutputStruct struct {
 type WorkflowRunArgs struct {
 	File           *string
 	Config         *WorkflowConfig
-	Callback       func(interface{})
+	Callback       func(any)
 	StepOutputType int
 }
 
@@ -80,7 +80,7 @@ func (w *Workflow) WorkflowWithConfig(config WorkflowConfig) WorkflowRunOptions 
 	}
 }
 
-func (w *Workflow) WorkflowWithCallback(callback func(interface{}), sot int) WorkflowRunOptions {
+func (w *Workflow) WorkflowWithCallback(callback func(any), sot int) WorkflowRunOptions {
 	return func(wra *WorkflowRunArgs) {
 		wra.Callback = callback
 		wra.StepOutputType = sot
@@ -90,7 +90,7 @@ func (w *Workflow) WorkflowWithCallback(callback func(interface{}), sot int) Wor
 func (w *Workflow) Run(opts ...WorkflowRunOptions) error {
 	args := WorkflowRunArgs{
 		StepOutputType: StepOutputTypePlain,
-		Callback:       func(sos interface{}) {},
+		Callback:       func(sos any) {},
 	}
 
 	for _, opt := range opts {
@@ -164,6 +164,7 @@ func (w *Workflow) Run(opts ...WorkflowRunOptions) error {
 
 				err := w.Execute(ExecuteArgs{
 					Directory:      lo.Ternary(step.Directory != "", step.Directory, args.Config.Directory),
+					Shell:          lo.Ternary(step.Shell != "", step.Shell, "sh"),
 					Command:        step.Run,
 					OutputCallback: callback,
 					ErrorCallback:  callback,
@@ -204,6 +205,7 @@ func (w *Workflow) Run(opts ...WorkflowRunOptions) error {
 
 type ExecuteArgs struct {
 	Directory      string
+	Shell          string
 	Command        string
 	OutputCallback func(string)
 	ErrorCallback  func(string)
@@ -225,7 +227,7 @@ func (w *Workflow) Execute(args ExecuteArgs) error {
 
 	defer os.Chdir(currentDirectory)
 
-	currentCmd := exec.Command("/bin/bash", "-c", command)
+	currentCmd := exec.Command(args.Shell, "-c", command)
 
 	stdoutPipe, err := currentCmd.StdoutPipe()
 	if err != nil {

@@ -22,5 +22,6 @@ type Job struct {
 type Step struct {
 	Name      string `yaml:"name,omitempty"`
 	Run       string `yaml:"run,omitempty"`
+	Shell     string `yaml:"shell"`
 	Directory string `yaml:"directory"`
 }
