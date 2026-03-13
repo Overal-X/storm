@@ -1,0 +1,67 @@
+name: deploy
+description: Setup SSH, install Storm CLI, and run Storm deployment
+
+inputs:
+  ssh_key:
+    description: Base64-encoded SSH private key
+    required: false
+    default: ""
+  ssh_output_file:
+    description: Path to write the decoded SSH key to
+    required: false
+    default: ./id_rsa
+  github_token:
+    description: GitHub token for cloning
+    required: true
+  github_repo:
+    description: GitHub repository (owner/repo)
+    required: true
+  github_ref:
+    description: Git branch or tag name
+    required: true
+  inventory:
+    description: Path to Storm inventory file
+    required: false
+    default: .storm/inventory.yaml
+  workflow:
+    description: Path to Storm workflow file
+    required: false
+    default: .storm/workflow.yaml
+
+runs:
+  using: composite
+  steps:
+    - name: Write SSH key
+      if: ${{ inputs.ssh_key != '' }}
+      shell: bash
+      run: |
+        echo "${{ inputs.ssh_key }}" | base64 -d > "${{ inputs.ssh_output_file }}"
+        chmod 600 "${{ inputs.ssh_output_file }}"
+
+    - name: Install storm
+      shell: bash
+      run: |
+        curl -fsSL https://raw.githubusercontent.com/Overal-X/storm/main/scripts/install.sh | bash
+        echo "$HOME/.storm/bin" >> "$GITHUB_PATH"
+
+    - name: Verify storm
+      shell: bash
+      run: storm version
+
+    - name: Substitute env variables into workflow config
+      shell: bash
+      env:
+        GITHUB_TOKEN: ${{ inputs.github_token }}
+        GITHUB_REPO: ${{ inputs.github_repo }}
+        GITHUB_REF: ${{ inputs.github_ref }}
+      run: |
+        envsubst '${GITHUB_TOKEN} ${GITHUB_REPO} ${GITHUB_REF}' < "${{ inputs.workflow }}" > .storm/workflow-temp.yaml
+        mv .storm/workflow-temp.yaml "${{ inputs.workflow }}"
+
+    - name: Install storm agent on remote servers
+      shell: bash
+      run: storm agent install -i "${{ inputs.inventory }}"
+
+    - name: Run storm workflow
+      shell: bash
+      run: storm agent run -i "${{ inputs.inventory }}" "${{ inputs.workflow }}"
