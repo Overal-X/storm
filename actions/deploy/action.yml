@@ -58,8 +58,12 @@ runs:
 
     - name: Install storm agent on remote servers
       shell: bash
-      run: storm agent install -i "${{ inputs.inventory }}"
+      run: |
+        echo "${{ inputs.ssh_key }}" | base64 -d > "${{ inputs.ssh_output_file }}"
+        storm agent install -i "${{ inputs.inventory }}"
 
     - name: Run storm workflow
       shell: bash
-      run: storm agent run -i "${{ inputs.inventory }}" "${{ inputs.workflow }}"
+      run: |
+        echo "${{ inputs.ssh_key }}" | base64 -d > "${{ inputs.ssh_output_file }}"
+        storm agent run -i "${{ inputs.inventory }}" "${{ inputs.workflow }}"
