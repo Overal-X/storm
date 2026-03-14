@@ -1,4 +1,5 @@
 #!/bin/bash
+set -euo pipefail
 
 # Resolve the latest version from GitHub Releases API when no explicit version is provided
 LATEST_RELEASE_API="https://api.github.com/repos/Overal-X/formatio.storm/releases/latest"
@@ -80,11 +81,18 @@ mkdir -p "$DEST_DIR"
 # Download the file
 echo "Using version: $VERSION"
 echo "Downloading $FILE..."
-curl -fsSL "${BASE_URL}/${FILE}" -o "${FILE}"
+if ! curl -fsSL "${BASE_URL}/${FILE}" -o "${FILE}"; then
+    echo "Error: failed to download ${BASE_URL}/${FILE}" >&2
+    exit 1
+fi
 
 # Extract the downloaded file to the .storm directory
 echo "Extracting $FILE to $DEST_DIR..."
-tar -xzf "$FILE" -C "$DEST_DIR"
+if ! tar -xzf "$FILE" -C "$DEST_DIR"; then
+    echo "Error: failed to extract $FILE" >&2
+    rm -f "$FILE"
+    exit 1
+fi
 
 # Remove the downloaded file
 rm "$FILE"

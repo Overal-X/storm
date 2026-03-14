@@ -1,3 +1,5 @@
+$ErrorActionPreference = "Stop"
+
 # Resolve the latest version from GitHub Releases API when no explicit version is provided
 $LatestReleaseApi = "https://api.github.com/repos/Overal-X/formatio.storm/releases/latest"
 
@@ -52,11 +54,22 @@ if (-not (Test-Path $DestDir)) {
 # Download the file
 Write-Host "Using version: $Version"
 Write-Host "Downloading $File..."
-Invoke-WebRequest -Uri "$BaseUrl/$File" -OutFile "$File"
+try {
+    Invoke-WebRequest -Uri "$BaseUrl/$File" -OutFile "$File"
+} catch {
+    Write-Error "Failed to download $BaseUrl/$File`: $($_.Exception.Message)"
+    exit 1
+}
 
 # Extract the downloaded file to the .storm\bin directory
 Write-Host "Extracting $File to $DestDir..."
-Expand-Archive -Path $File -DestinationPath $DestDir -Force
+try {
+    Expand-Archive -Path $File -DestinationPath $DestDir -Force
+} catch {
+    Write-Error "Failed to extract ${File}: $($_.Exception.Message)"
+    Remove-Item -Path $File -Force -ErrorAction SilentlyContinue
+    exit 1
+}
 
 # Remove the downloaded file
 Remove-Item -Path $File -Force
