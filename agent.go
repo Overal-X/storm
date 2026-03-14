@@ -204,7 +204,7 @@ func (a *Agent) InstallProd(ic InventoryConfig) error {
 		case "windows":
 			_, _, err := a.ssh.ExecuteCommand(ExecuteCommandArgs{
 				Client:         sshClient,
-				Command:        "powershell -c irm https://raw.githubusercontent.com/Overal-X/formatio.storm/main/scripts/install.sh | iex",
+				Command:        "powershell -c irm https://raw.githubusercontent.com/Overal-X/storm/main/scripts/install.sh | iex",
 				OutputCallback: func(s string) {},
 				ErrorCallback:  func(s string) {},
 			})
@@ -215,7 +215,7 @@ func (a *Agent) InstallProd(ic InventoryConfig) error {
 		case "darwin":
 			_, _, err := a.ssh.ExecuteCommand(ExecuteCommandArgs{
 				Client:         sshClient,
-				Command:        "curl -fsSL https://raw.githubusercontent.com/Overal-X/formatio.storm/main/scripts/install.sh | bash",
+				Command:        "curl -fsSL https://raw.githubusercontent.com/Overal-X/storm/main/scripts/install.sh | bash",
 				OutputCallback: func(s string) { fmt.Println("> ", s) },
 				ErrorCallback:  func(s string) { fmt.Println("> ", s) },
 			})
