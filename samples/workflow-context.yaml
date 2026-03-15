@@ -1,0 +1,20 @@
+# yaml-language-server: $schema=https://github.com/Overal-X/formatio.storm/raw/main/schema.workflow.json
+
+# storm run -t=false -c 'github:{"REPO_NAME": "formatio.storm"}' samples/workflow-context.yaml
+
+name: Workflow with Context
+
+directory: ./samples/basic
+jobs:
+  - name: build
+    runs-on: self-hosted
+
+    steps:
+      - name: Install curl
+        run: |
+          ls -la
+          echo "${{ github.REPO_NAME }}"
+
+      - name: Samples
+        run: ls -la
+        directory: ./samples

@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"math"
 	"os"
 	"os/exec"
 	"strings"
@@ -63,6 +64,8 @@ type WorkflowStepOutputStruct struct {
 type WorkflowRunArgs struct {
 	File           *string
 	Config         *WorkflowConfig
+	Contexts       map[string]map[string]any
+	Directory      string
 	Callback       func(any)
 	StepOutputType int
 }
@@ -78,6 +81,18 @@ func (w *Workflow) WorkflowWithFile(file string) WorkflowRunOptions {
 func (w *Workflow) WorkflowWithConfig(config WorkflowConfig) WorkflowRunOptions {
 	return func(wra *WorkflowRunArgs) {
 		wra.Config = &config
+	}
+}
+
+func (w *Workflow) WorkflowWithContexts(contexts map[string]map[string]any) WorkflowRunOptions {
+	return func(wra *WorkflowRunArgs) {
+		wra.Contexts = contexts
+	}
+}
+
+func (w *Workflow) WorkflowWithDirectory(directory string) WorkflowRunOptions {
+	return func(wra *WorkflowRunArgs) {
+		wra.Directory = directory
 	}
 }
 
@@ -103,12 +118,29 @@ func (w *Workflow) Run(opts ...WorkflowRunOptions) error {
 	}
 
 	if args.File != nil && args.Config == nil {
-		_config, err := w.Load(*args.File)
+		raw, err := os.ReadFile(*args.File)
 		if err != nil {
-			return err
+			return fmt.Errorf("cannot read workflow file: %w", err)
 		}
 
-		args.Config = _config
+		content := string(raw)
+		if len(args.Contexts) > 0 {
+			content, err = RenderTemplate(content, args.Contexts)
+			if err != nil {
+				return fmt.Errorf("template render error: %w", err)
+			}
+		}
+
+		var config WorkflowConfig
+		if err := yaml.Unmarshal([]byte(content), &config); err != nil {
+			return fmt.Errorf("cannot parse workflow: %w", err)
+		}
+
+		args.Config = &config
+	}
+
+	if args.Directory != "" && args.Config.Directory == "" {
+		args.Config.Directory = args.Directory
 	}
 
 	jobState := make(JobState, 0)
@@ -180,15 +212,16 @@ func (w *Workflow) Run(opts ...WorkflowRunOptions) error {
 
 		end := time.Now()
 		duration := end.Sub(start)
+		timeToRun := math.Round(duration.Seconds()*100) / 100
 
 		switch args.StepOutputType {
 		case StepOutputTypePlain:
-			fmt.Printf("Took %fs to run.\n\n", duration.Seconds())
+			fmt.Printf("Took %fs to run.\n\n", timeToRun)
 		case StepOutputTypeStruct:
 			args.Callback(WorkflowStepOutputStruct{
 				Path:    "__builtin__.TimeTaken",
 				Command: "TimeTaken",
-				Message: fmt.Sprintf("%fs", duration.Seconds()),
+				Message: fmt.Sprintf("%fs", timeToRun),
 			})
 		}
 

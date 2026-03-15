@@ -5,7 +5,6 @@ import (
 	"os"
 
 	storm "github.com/Overal-X/formatio.storm"
-	"github.com/samber/lo"
 	"github.com/spf13/cobra"
 )
 
@@ -41,12 +40,26 @@ var agentRunWorkflowCmd = &cobra.Command{
 		workflowFile := args[0]
 		inventoryFile, _ := cmd.Flags().GetString("inventory")
 		format, _ := cmd.Flags().GetInt("format")
+		contextFlags, _ := cmd.Flags().GetStringArray("context")
+
+		runOpts := []storm.RunOption{}
 
 		agent := storm.NewAgent()
-		err := agent.Run(
+		runOpts = append(runOpts,
 			agent.AgentWithFiles(workflowFile, inventoryFile),
 			agent.AgentWithCallback(func(i any) { fmt.Println(i) }, format),
 		)
+
+		if len(contextFlags) > 0 {
+			contexts, err := storm.ParseContextFlags(contextFlags)
+			if err != nil {
+				fmt.Println(err)
+				os.Exit(1)
+			}
+			runOpts = append(runOpts, agent.AgentWithContexts(contexts))
+		}
+
+		err := agent.Run(runOpts...)
 		if err != nil {
 			os.Exit(1)
 		}
@@ -147,6 +160,7 @@ var runWorkflowCmd = &cobra.Command{
 		trashWorkflow, _ := cmd.Flags().GetBool("trash-workflow")
 		directory, _ := cmd.Flags().GetString("directory")
 		format, _ := cmd.Flags().GetInt("format")
+		contextFlags, _ := cmd.Flags().GetStringArray("context")
 
 		if trashWorkflow {
 			defer os.Remove(workflowFile)
@@ -154,18 +168,25 @@ var runWorkflowCmd = &cobra.Command{
 
 		workflow := storm.NewWorkflow()
 
-		wc, err := workflow.Load(workflowFile)
-		if err != nil {
-			fmt.Println(err)
-			os.Exit(1)
+		runOpts := []storm.WorkflowRunOptions{
+			workflow.WorkflowWithFile(workflowFile),
+			workflow.WorkflowWithCallback(func(i any) { fmt.Println(i) }, format),
 		}
 
-		wc.Directory = lo.Ternary(wc.Directory == "" && directory != "", directory, wc.Directory)
+		if directory != "" {
+			runOpts = append(runOpts, workflow.WorkflowWithDirectory(directory))
+		}
 
-		err = workflow.Run(
-			workflow.WorkflowWithConfig(*wc),
-			workflow.WorkflowWithCallback(func(i any) { fmt.Println(i) }, format),
-		)
+		if len(contextFlags) > 0 {
+			contexts, err := storm.ParseContextFlags(contextFlags)
+			if err != nil {
+				fmt.Println(err)
+				os.Exit(1)
+			}
+			runOpts = append(runOpts, workflow.WorkflowWithContexts(contexts))
+		}
+
+		err := workflow.Run(runOpts...)
 		if err != nil {
 			fmt.Println(err)
 			os.Exit(1)
@@ -185,6 +206,7 @@ func main() {
 
 	agentRunWorkflowCmd.Flags().StringP("inventory", "i", "./inventory.yaml", "formatio storm inventory")
 	agentRunWorkflowCmd.Flags().IntP("format", "f", 1, "available options are; 1 => plain, 2 => struct, 3 => json")
+	agentRunWorkflowCmd.Flags().StringArrayP("context", "c", nil, "template context as name:json (repeatable)")
 	agentCmd.AddCommand(agentRunWorkflowCmd)
 
 	inventoryCmd.AddCommand(encryptInventoryCmd)
@@ -200,6 +222,7 @@ func main() {
 	runWorkflowCmd.Flags().BoolP("trash-workflow", "t", true, "remove workflow file if the workflow is complete")
 	runWorkflowCmd.Flags().StringP("directory", "d", ".", "directory to run the workflow from")
 	runWorkflowCmd.Flags().IntP("format", "f", 1, "available options are; 1 => plain, 2 => struct, 3 => json")
+	runWorkflowCmd.Flags().StringArrayP("context", "c", nil, "template context as name:json (repeatable)")
 	rootCmd.AddCommand(runWorkflowCmd)
 
 	rootCmd.AddCommand(agentCmd)

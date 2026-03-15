@@ -22,6 +22,7 @@ type RunArgs struct {
 	Wc *WorkflowConfig
 	Ic *InventoryConfig
 
+	Contexts       map[string]map[string]any
 	Callback       func(interface{})
 	StepOutputType int
 }
@@ -39,6 +40,12 @@ func (a *Agent) AgentWithFiles(w string, i string) RunOption {
 	return func(ra *RunArgs) {
 		ra.Wf = &w
 		ra.If = &i
+	}
+}
+
+func (a *Agent) AgentWithContexts(contexts map[string]map[string]any) RunOption {
+	return func(ra *RunArgs) {
+		ra.Contexts = contexts
 	}
 }
 
@@ -60,8 +67,40 @@ func (a *Agent) Run(opts ...RunOption) error {
 		opt(&args)
 	}
 
+	// effectiveWf tracks the workflow file to copy to remote — it may be a
+	// rendered temp file when contexts are provided.
+	var effectiveWf string
+
 	if args.Wf != nil && args.If != nil {
-		_wc, err := a.workflow.Load(*args.Wf)
+		effectiveWf = *args.Wf
+
+		if len(args.Contexts) > 0 {
+			raw, err := os.ReadFile(effectiveWf)
+			if err != nil {
+				return fmt.Errorf("cannot read workflow file: %w", err)
+			}
+
+			rendered, err := RenderTemplate(string(raw), args.Contexts)
+			if err != nil {
+				return fmt.Errorf("template render error: %w", err)
+			}
+
+			tmpFile, err := os.CreateTemp("", "storm-workflow-*.yaml")
+			if err != nil {
+				return fmt.Errorf("cannot create temp file: %w", err)
+			}
+			defer os.Remove(tmpFile.Name())
+
+			if _, err := tmpFile.WriteString(rendered); err != nil {
+				tmpFile.Close()
+				return fmt.Errorf("cannot write temp file: %w", err)
+			}
+			tmpFile.Close()
+
+			effectiveWf = tmpFile.Name()
+		}
+
+		_wc, err := a.workflow.Load(effectiveWf)
 		if err != nil {
 			return err
 		}
@@ -109,7 +148,7 @@ func (a *Agent) Run(opts ...RunOption) error {
 
 		err = a.ssh.CopyFile(CopyFileArgs{
 			Client:      sshClient,
-			From:        *args.Wf,
+			From:        effectiveWf,
 			To:          destinationFilePath,
 			Permissions: "0655",
 		})
