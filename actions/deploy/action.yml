@@ -27,6 +27,13 @@ inputs:
     description: Path to Storm workflow file
     required: false
     default: .storm/workflow.yaml
+  env:
+    description: |
+      Environment variables to inject, one per line:
+        KEY1=value1
+        KEY2=value2
+    required: false
+    default: ""
 
 runs:
   using: composite
@@ -47,9 +54,10 @@ runs:
         GITHUB_TOKEN: ${{ inputs.github_token }}
         GITHUB_REPO: ${{ inputs.github_repo }}
         GITHUB_REF: ${{ inputs.github_ref }}
+        ENV: ${{ inputs.env }}
       run: |
         export GITHUB_REF="${GITHUB_REF#refs/heads/}"
-        envsubst '${GITHUB_TOKEN} ${GITHUB_REPO} ${GITHUB_REF}' < "${{ inputs.workflow }}" > .storm/workflow-temp.yaml
+        envsubst '${GITHUB_TOKEN} ${GITHUB_REPO} ${GITHUB_REF} ${ENV}' < "${{ inputs.workflow }}" > .storm/workflow-temp.yaml
         mv .storm/workflow-temp.yaml "${{ inputs.workflow }}"
 
     - name: Write SSH key
