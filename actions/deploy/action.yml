@@ -27,15 +27,15 @@ inputs:
     description: Path to Storm workflow file
     required: false
     default: .storm/workflow.yaml
-  vars:
+  vars_context:
     description: "Context variables to inject into the workflow in base64 format"
     required: false
     default: ""
-  secrets:
+  secrets_context:
     description: "Context secrets to inject into the workflow in base64 format"
     required: false
     default: ""
-  github:
+  github_context:
     description: "Context github variables to inject into the workflow in base64 format"
     required: false
     default: ""
@@ -67,9 +67,9 @@ runs:
     - name: Run storm workflow
       shell: bash
       env:
-        GITHUB_CONTEXT: ${{ inputs.github }}
-        SECRETS_CONTEXT: ${{ inputs.secrets }}
-        VARS_CONTEXT: ${{ inputs.vars }}
+        GITHUB_CONTEXT: ${{ inputs.github_context }}
+        SECRETS_CONTEXT: ${{ inputs.secrets_context }}
+        VARS_CONTEXT: ${{ inputs.vars_context }}
       run: |
         ARGS=()
         [ -n "$GITHUB_CONTEXT" ] && ARGS+=(--context "github:$(echo "$GITHUB_CONTEXT" | jq -c .)")
