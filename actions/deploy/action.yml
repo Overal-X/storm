@@ -71,8 +71,8 @@ runs:
         VARS_CONTEXT: ${{ inputs.vars }}
       run: |
         ARGS=()
-        [ -n "$GITHUB_CONTEXT" ] && ARGS+=(--context "github:$(echo "$GITHUB_CONTEXT" | jq -c .)")
-        [ -n "$SECRETS_CONTEXT" ] && ARGS+=(--context "secrets:$(echo "$SECRETS_CONTEXT" | jq -c .)")
-        [ -n "$VARS_CONTEXT" ] && ARGS+=(--context "vars:$(echo "$VARS_CONTEXT" | jq -c .)")
+        [ -n "$GITHUB_CONTEXT" ] && ARGS+=(--context 'github:$GITHUB_CONTEXT')
+        [ -n "$SECRETS_CONTEXT" ] && ARGS+=(--context 'secrets:$SECRETS_CONTEXT')
+        [ -n "$VARS_CONTEXT" ] && ARGS+=(--context 'vars:$VARS_CONTEXT')
 
         storm agent run "${ARGS[@]}" -i ${{ inputs.inventory }} ${{ inputs.workflow }}
