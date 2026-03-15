@@ -71,11 +71,17 @@ runs:
         SECRETS_CONTEXT: ${{ inputs.secrets_context }}
         VARS_CONTEXT: ${{ inputs.vars_context }}
       run: |
-        ARGS=()
-        EMPTY_JSON=$(echo '{}' | base64 -w 0)  # = e30K
+        # ARGS=()
+        # EMPTY_JSON=$(echo '{}' | base64 -w 0)  # = e30K
 
-        [ -n "$GITHUB_CONTEXT" ] && [ "$GITHUB_CONTEXT" != "$EMPTY_JSON" ] && ARGS+=(--context "github:$GITHUB_CONTEXT")
-        [ -n "$SECRETS_CONTEXT" ] && [ "$SECRETS_CONTEXT" != "$EMPTY_JSON" ] && ARGS+=(--context "secrets:$SECRETS_CONTEXT")
-        [ -n "$VARS_CONTEXT" ] && [ "$VARS_CONTEXT" != "$EMPTY_JSON" ] && ARGS+=(--context "vars:$VARS_CONTEXT")
+        # [ -n "$GITHUB_CONTEXT" ] && [ "$GITHUB_CONTEXT" != "$EMPTY_JSON" ] && ARGS+=(--context "github:$GITHUB_CONTEXT")
+        # [ -n "$SECRETS_CONTEXT" ] && [ "$SECRETS_CONTEXT" != "$EMPTY_JSON" ] && ARGS+=(--context "secrets:$SECRETS_CONTEXT")
+        # [ -n "$VARS_CONTEXT" ] && [ "$VARS_CONTEXT" != "$EMPTY_JSON" ] && ARGS+=(--context "vars:$VARS_CONTEXT")
 
-        storm agent run --context-format=base64 "${ARGS[@]}" -i ${{ inputs.inventory }} ${{ inputs.workflow }}
+        # storm agent run --context-format=base64 "${ARGS[@]}" -i ${{ inputs.inventory }} ${{ inputs.workflow }}
+
+        storm agent run \
+          --context-format=base64 \
+          --context="github:$GITHUB_CONTEXT" \
+          --context="secrets:$SECRETS_CONTEXT" \
+          -i ${{ inputs.inventory }} ${{ inputs.workflow }}
