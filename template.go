@@ -1,6 +1,7 @@
 package storm
 
 import (
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"regexp"
@@ -8,24 +9,46 @@ import (
 	"strings"
 )
 
+const (
+	ContextFormatJSON   = "json"
+	ContextFormatBase64 = "base64"
+)
+
 var exprRegex = regexp.MustCompile(`\$\{\{\s*(\w+)\.(\w+)\s*\}\}`)
 
-// ParseContextFlags parses CLI --context flags in "name:jsonValue" format
+// ParseContextFlags parses CLI --context flags in "name:value" format
 // into a nested map. Each flag is split on the first ":" only, so JSON
 // values containing colons are handled correctly.
-func ParseContextFlags(flags []string) (map[string]map[string]any, error) {
+//
+// The format parameter controls how the value portion is interpreted:
+//   - "json" (default): value is raw JSON
+//   - "base64": value is a base64-encoded JSON string
+func ParseContextFlags(flags []string, format string) (map[string]map[string]any, error) {
+	if format == "" {
+		format = ContextFormatJSON
+	}
+
 	result := map[string]map[string]any{}
 
 	for _, flag := range flags {
 		parts := strings.SplitN(flag, ":", 2)
 		if len(parts) != 2 {
-			return nil, fmt.Errorf("invalid context flag %q: expected name:json", flag)
+			return nil, fmt.Errorf("invalid context flag %q: expected name:value", flag)
 		}
 
 		name, raw := parts[0], parts[1]
 
+		jsonBytes := []byte(raw)
+		if format == ContextFormatBase64 {
+			decoded, err := base64.StdEncoding.DecodeString(raw)
+			if err != nil {
+				return nil, fmt.Errorf("invalid base64 for context %q: %w", name, err)
+			}
+			jsonBytes = decoded
+		}
+
 		var parsed map[string]any
-		if err := json.Unmarshal([]byte(raw), &parsed); err != nil {
+		if err := json.Unmarshal(jsonBytes, &parsed); err != nil {
 			return nil, fmt.Errorf("invalid json for context %q: %w", name, err)
 		}
 

@@ -28,15 +28,15 @@ inputs:
     required: false
     default: .storm/workflow.yaml
   vars:
-    description: "Context variables to inject into the workflow"
+    description: "Context variables to inject into the workflow in base64 format"
     required: false
     default: ""
   secrets:
-    description: "Context secrets to inject into the workflow"
+    description: "Context secrets to inject into the workflow in base64 format"
     required: false
     default: ""
   github:
-    description: "Context github variables to inject into the workflow"
+    description: "Context github variables to inject into the workflow in base64 format"
     required: false
     default: ""
 
@@ -76,4 +76,4 @@ runs:
         [ -n "$SECRETS_CONTEXT" ] && ARGS+=(--context "secrets:$(echo "$SECRETS_CONTEXT" | jq -c .)")
         [ -n "$VARS_CONTEXT" ] && ARGS+=(--context "vars:$(echo "$VARS_CONTEXT" | jq -c .)")
 
-        storm agent run "${ARGS[@]}" -i ${{ inputs.inventory }} ${{ inputs.workflow }}
+        storm agent run --context-format=base64 "${ARGS[@]}" -i ${{ inputs.inventory }} ${{ inputs.workflow }}

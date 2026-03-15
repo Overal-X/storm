@@ -41,6 +41,7 @@ var agentRunWorkflowCmd = &cobra.Command{
 		inventoryFile, _ := cmd.Flags().GetString("inventory")
 		format, _ := cmd.Flags().GetInt("format")
 		contextFlags, _ := cmd.Flags().GetStringArray("context")
+		contextFormat, _ := cmd.Flags().GetString("context-format")
 
 		runOpts := []storm.RunOption{}
 
@@ -51,7 +52,7 @@ var agentRunWorkflowCmd = &cobra.Command{
 		)
 
 		if len(contextFlags) > 0 {
-			contexts, err := storm.ParseContextFlags(contextFlags)
+			contexts, err := storm.ParseContextFlags(contextFlags, contextFormat)
 			if err != nil {
 				fmt.Println(err)
 				os.Exit(1)
@@ -161,6 +162,7 @@ var runWorkflowCmd = &cobra.Command{
 		directory, _ := cmd.Flags().GetString("directory")
 		format, _ := cmd.Flags().GetInt("format")
 		contextFlags, _ := cmd.Flags().GetStringArray("context")
+		contextFormat, _ := cmd.Flags().GetString("context-format")
 
 		if trashWorkflow {
 			defer os.Remove(workflowFile)
@@ -178,7 +180,7 @@ var runWorkflowCmd = &cobra.Command{
 		}
 
 		if len(contextFlags) > 0 {
-			contexts, err := storm.ParseContextFlags(contextFlags)
+			contexts, err := storm.ParseContextFlags(contextFlags, contextFormat)
 			if err != nil {
 				fmt.Println(err)
 				os.Exit(1)
@@ -206,7 +208,8 @@ func main() {
 
 	agentRunWorkflowCmd.Flags().StringP("inventory", "i", "./inventory.yaml", "formatio storm inventory")
 	agentRunWorkflowCmd.Flags().IntP("format", "f", 1, "available options are; 1 => plain, 2 => struct, 3 => json")
-	agentRunWorkflowCmd.Flags().StringArrayP("context", "c", nil, "template context as name:json (repeatable)")
+	agentRunWorkflowCmd.Flags().StringArrayP("context", "c", nil, "template context as name:value (repeatable)")
+	agentRunWorkflowCmd.Flags().String("context-format", "json", "format of context values: json or base64")
 	agentCmd.AddCommand(agentRunWorkflowCmd)
 
 	inventoryCmd.AddCommand(encryptInventoryCmd)
@@ -222,7 +225,8 @@ func main() {
 	runWorkflowCmd.Flags().BoolP("trash-workflow", "t", true, "remove workflow file if the workflow is complete")
 	runWorkflowCmd.Flags().StringP("directory", "d", ".", "directory to run the workflow from")
 	runWorkflowCmd.Flags().IntP("format", "f", 1, "available options are; 1 => plain, 2 => struct, 3 => json")
-	runWorkflowCmd.Flags().StringArrayP("context", "c", nil, "template context as name:json (repeatable)")
+	runWorkflowCmd.Flags().StringArrayP("context", "c", nil, "template context as name:value (repeatable)")
+	runWorkflowCmd.Flags().String("context-format", "json", "format of context values: json or base64")
 	rootCmd.AddCommand(runWorkflowCmd)
 
 	rootCmd.AddCommand(agentCmd)
