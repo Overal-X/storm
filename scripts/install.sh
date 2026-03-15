@@ -1,5 +1,5 @@
 #!/bin/bash
-# set -euo pipefail
+set -euo pipefail
 
 # Resolve the latest version from GitHub Releases API when no explicit version is provided
 LATEST_RELEASE_API="https://api.github.com/repos/Overal-X/formatio.storm/releases/latest"
@@ -17,8 +17,8 @@ resolve_latest_version() {
 }
 
 # Get the version from the command line argument or resolve latest
-if [ -n "$1" ]; then
-    VERSION="$1"
+if [ -n "${1:-}" ]; then
+    VERSION="${1}"
 else
     VERSION=$(resolve_latest_version)
 fi
