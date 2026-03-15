@@ -200,6 +200,7 @@ func (a *Agent) InstallProd(ic InventoryConfig) error {
 		platform := strings.Split(runtime.GOOS, "/")[0]
 		fmt.Println("Installing storm on server ... ")
 
+		// TODO: get remote server type
 		switch platform {
 		case "windows":
 			_, _, err := a.ssh.ExecuteCommand(ExecuteCommandArgs{
@@ -215,7 +216,7 @@ func (a *Agent) InstallProd(ic InventoryConfig) error {
 		case "darwin":
 			_, _, err := a.ssh.ExecuteCommand(ExecuteCommandArgs{
 				Client:         sshClient,
-				Command:        "curl -fsSL https://raw.githubusercontent.com/Overal-X/storm/main/scripts/install.sh | bash",
+				Command:        "$SHELL -lc 'curl -fsSL https://raw.githubusercontent.com/Overal-X/storm/main/scripts/install.sh | bash'",
 				OutputCallback: func(s string) { fmt.Println("> ", s) },
 				ErrorCallback:  func(s string) { fmt.Println("> ", s) },
 			})
