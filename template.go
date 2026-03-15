@@ -26,7 +26,6 @@ func ParseContextFlags(flags []string) (map[string]map[string]any, error) {
 		}
 
 		name, raw := parts[0], parts[1]
-		fmt.Println("name", name, "raw", raw)
 
 		var parsed map[string]any
 		if err := json.Unmarshal([]byte(raw), &parsed); err != nil {
