@@ -229,7 +229,7 @@ func (w *Workflow) Execute(args ExecuteArgs) error {
 
 	defer os.Chdir(currentDirectory)
 
-	currentCmd := exec.Command(args.Shell, "-lc", command)
+	currentCmd := exec.Command(args.Shell, "-eo pipefail -lc", command)
 	currentCmd.Env = os.Environ()
 
 	stdoutPipe, err := currentCmd.StdoutPipe()
