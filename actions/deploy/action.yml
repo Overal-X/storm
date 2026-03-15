@@ -30,15 +30,15 @@ inputs:
   vars:
     description: "Context variables to inject into the workflow"
     required: false
-    default: "{}"
+    default: ""
   secrets:
     description: "Context secrets to inject into the workflow"
     required: false
-    default: "{}"
+    default: ""
   github:
     description: "Context github variables to inject into the workflow"
     required: false
-    default: "{}"
+    default: ""
 
 runs:
   using: composite
