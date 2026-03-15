@@ -213,7 +213,7 @@ func (a *Agent) InstallProd(ic InventoryConfig) error {
 				return errors.Join(err, errors.New("build failed; could not install storm"))
 			}
 		case "linux", "darwin":
-			one, two, err := a.ssh.ExecuteCommand(ExecuteCommandArgs{
+			_, _, err := a.ssh.ExecuteCommand(ExecuteCommandArgs{
 				Client:         sshClient,
 				Command:        "curl -fsSL https://raw.githubusercontent.com/Overal-X/storm/main/scripts/install.sh | bash",
 				OutputCallback: func(s string) { fmt.Println("> ", s) },
@@ -222,8 +222,6 @@ func (a *Agent) InstallProd(ic InventoryConfig) error {
 			if err != nil {
 				return errors.Join(err, errors.New("build failed; could not install storm"))
 			}
-			fmt.Println("one: ", one)
-			fmt.Println("two: ", two)
 		default:
 			return errors.New("platform not supported")
 		}
