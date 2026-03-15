@@ -17,9 +17,6 @@ func ParseContextFlags(flags []string) (map[string]map[string]any, error) {
 	result := map[string]map[string]any{}
 
 	for _, flag := range flags {
-		flag = strings.Trim(strings.TrimSpace(flag), "\"")
-		flag = strings.Trim(strings.TrimSpace(flag), "'")
-
 		parts := strings.SplitN(flag, ":", 2)
 		if len(parts) != 2 {
 			return nil, fmt.Errorf("invalid context flag %q: expected name:json", flag)

@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"math"
 	"os"
 	"os/exec"
 	"strings"
@@ -212,16 +211,16 @@ func (w *Workflow) Run(opts ...WorkflowRunOptions) error {
 
 		end := time.Now()
 		duration := end.Sub(start)
-		timeToRun := math.Round(duration.Seconds()*100) / 100
+		timeToRun := duration.Seconds()
 
 		switch args.StepOutputType {
 		case StepOutputTypePlain:
-			fmt.Printf("Took %fs to run.\n\n", timeToRun)
+			fmt.Printf("Took %.2fs to run.\n\n", timeToRun)
 		case StepOutputTypeStruct:
 			args.Callback(WorkflowStepOutputStruct{
 				Path:    "__builtin__.TimeTaken",
 				Command: "TimeTaken",
-				Message: fmt.Sprintf("%fs", timeToRun),
+				Message: fmt.Sprintf("%.2fs", timeToRun),
 			})
 		}
 
@@ -262,7 +261,7 @@ func (w *Workflow) Execute(args ExecuteArgs) error {
 
 	defer os.Chdir(currentDirectory)
 
-	currentCmd := exec.Command(args.Shell, "-eo pipefail -lc", command)
+	currentCmd := exec.Command(args.Shell, "-lc", "-oe", "pipefail", command)
 	currentCmd.Env = os.Environ()
 
 	stdoutPipe, err := currentCmd.StdoutPipe()
