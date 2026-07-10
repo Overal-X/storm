@@ -1,4 +1,4 @@
-# yaml-language-server: $schema=https://github.com/Overal-X/formatio.storm/raw/main/schema.workflow.json
+# yaml-language-server: $schema=https://github.com/Overal-X/storm/raw/main/schema.workflow.json
 
 name: Deploy to server
 

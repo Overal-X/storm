@@ -20,7 +20,7 @@ if (-not $Version) {
 }
 
 # Define the base URL for the release artifacts
-$BaseUrl = "https://github.com/Overal-X/formatio.storm/releases/download/$Version"
+$BaseUrl = "https://github.com/Overal-X/storm/releases/download/$Version"
 
 # Define the file names (adjust these as needed)
 $Windows_AMD64 = "storm_Windows_x86_64.zip"
