@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	storm "github.com/Overal-X/storm"
+	storm "github.com/overal-x/storm"
 	"github.com/spf13/cobra"
 )
 

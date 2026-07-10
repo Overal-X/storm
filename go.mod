@@ -1,4 +1,4 @@
-module github.com/Overal-X/storm
+module github.com/overal-x/storm
 
 go 1.22.0
 

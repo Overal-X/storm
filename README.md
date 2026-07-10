@@ -13,7 +13,7 @@ Storm is an automation agent that helps to run workflows on remote or local mach
 For use in golang
 
 ```sh
-go get github.com/Overal-X/storm
+go get github.com/overal-x/storm
 ```
 
 For Linux and MacOS
@@ -28,7 +28,7 @@ For Windows
 irm https://raw.githubusercontent.com/Overal-X/formatio.storm/main/scripts/install.ps1 | iex
 ```
 
-Or download binaries from [release page](https://github.com/Overal-X/storm/releases)
+Or download binaries from [release page](https://github.com/overal-x/storm/releases)
 
 # GitHub Action
 

@@ -24,7 +24,7 @@ else
 fi
 
 # Define the base URL for the release artifacts
-BASE_URL="https://github.com/Overal-X/storm/releases/download/${VERSION}"
+BASE_URL="https://github.com/overal-x/storm/releases/download/${VERSION}"
 
 # Define the file names (adjust these as needed)
 LINUX_AMD64="storm_Linux_x86_64.tar.gz"
