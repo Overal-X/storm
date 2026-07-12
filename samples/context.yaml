@@ -1,0 +1,10 @@
+# Whole-contexts file: each top-level key is a context name, referenced in a
+# workflow as ${{ <name>.<key> }} (e.g. ${{ github.REPO_NAME }}).
+#
+# Usage:
+#   storm run -t=false --context-file ./samples/context.yaml ./samples/workflow-context.yaml
+#
+# Files may be YAML or JSON. Inline --context flags override individual keys.
+
+github:
+  REPO_NAME: formatio.storm

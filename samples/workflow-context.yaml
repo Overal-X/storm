@@ -1,6 +1,7 @@
 # yaml-language-server: $schema=https://github.com/overal-x/storm/raw/main/schema.workflow.json
 
 # storm run -t=false -c 'github:{"REPO_NAME": "formatio.storm"}' samples/workflow-context.yaml
+# storm run -t=false --context-file samples/context.yaml samples/workflow-context.yaml
 
 name: Workflow with Context
 

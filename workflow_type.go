@@ -10,6 +10,19 @@ type WorkflowConfig struct {
 
 	// Directory to run the workflow from, defaults to the current directory
 	Directory string `yaml:"directory"`
+
+	// Defaults provides global fallbacks applied to every job step, such as
+	// the shell and directory, unless the step overrides them.
+	Defaults Defaults `yaml:"defaults,omitempty"`
+}
+
+type Defaults struct {
+	// Directory to run steps from, overrides the workflow-level Directory
+	// and is itself overridden by a step's own Directory.
+	Directory string `yaml:"directory,omitempty"`
+
+	// Shell to run steps with, overridden by a step's own Shell.
+	Shell string `yaml:"shell,omitempty"`
 }
 
 type Job struct {

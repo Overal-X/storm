@@ -195,8 +195,8 @@ func (w *Workflow) Run(opts ...WorkflowRunOptions) error {
 				}
 
 				err := w.Execute(ExecuteArgs{
-					Directory:      lo.Ternary(step.Directory != "", step.Directory, args.Config.Directory),
-					Shell:          lo.Ternary(step.Shell != "", step.Shell, os.Getenv("SHELL")),
+					Directory:      lo.CoalesceOrEmpty(step.Directory, args.Config.Defaults.Directory, args.Config.Directory),
+					Shell:          lo.CoalesceOrEmpty(step.Shell, args.Config.Defaults.Shell, os.Getenv("SHELL")),
 					Command:        step.Run,
 					OutputCallback: callback,
 					ErrorCallback:  callback,

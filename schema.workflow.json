@@ -27,6 +27,20 @@
       "type": "string",
       "description": "Directory to run the workflow from"
     },
+    "defaults": {
+      "type": "object",
+      "description": "Global fallbacks applied to every job step unless the step overrides them.",
+      "properties": {
+        "directory": {
+          "type": "string",
+          "description": "Directory to run steps from. Overrides the workflow-level directory; overridden by a step's own directory."
+        },
+        "shell": {
+          "type": "string",
+          "description": "Shell to run steps with. Overridden by a step's own shell."
+        }
+      }
+    },
     "jobs": {
       "type": "array",
       "items": {
